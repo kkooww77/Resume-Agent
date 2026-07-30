@@ -64,6 +64,9 @@ export default function WorkspaceV2() {
     updateExperience,
     deleteExperience,
     reorderExperiences,
+    updateWorkExperience,
+    deleteWorkExperience,
+    reorderWorkExperiences,
     updateEducation,
     deleteEducation,
     reorderEducations,
@@ -382,6 +385,9 @@ export default function WorkspaceV2() {
         updateExperience={updateExperience}
         deleteExperience={deleteExperience}
         reorderExperiences={reorderExperiences}
+        updateWorkExperience={updateWorkExperience}
+        deleteWorkExperience={deleteWorkExperience}
+        reorderWorkExperiences={reorderWorkExperiences}
         updateEducation={updateEducation}
         deleteEducation={deleteEducation}
         reorderEducations={reorderEducations}

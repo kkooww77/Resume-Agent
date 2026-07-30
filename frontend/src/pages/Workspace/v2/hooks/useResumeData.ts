@@ -223,6 +223,31 @@ export function useResumeData() {
     setResumeData((prev) => ({ ...prev, projects }))
   }, [])
 
+  // ============ 工作经历 ============
+  const updateWorkExperience = useCallback((experience: Experience) => {
+    setResumeData((prev) => {
+      const list = prev.workExperience || []
+      const exists = list.some((e) => e.id === experience.id)
+      return {
+        ...prev,
+        workExperience: exists
+          ? list.map((e) => (e.id === experience.id ? experience : e))
+          : [...list, experience],
+      }
+    })
+  }, [])
+
+  const deleteWorkExperience = useCallback((id: string) => {
+    setResumeData((prev) => ({
+      ...prev,
+      workExperience: (prev.workExperience || []).filter((e) => e.id !== id),
+    }))
+  }, [])
+
+  const reorderWorkExperiences = useCallback((experiences: Experience[]) => {
+    setResumeData((prev) => ({ ...prev, workExperience: experiences }))
+  }, [])
+
   // ============ 实习经历 ============
   const updateExperience = useCallback((experience: Experience) => {
     setResumeData((prev) => ({
@@ -447,7 +472,11 @@ export function useResumeData() {
     updateProject,
     deleteProject,
     reorderProjects,
-    // 经历
+    // 工作经历
+    updateWorkExperience,
+    deleteWorkExperience,
+    reorderWorkExperiences,
+    // 实习经历
     updateExperience,
     deleteExperience,
     reorderExperiences,

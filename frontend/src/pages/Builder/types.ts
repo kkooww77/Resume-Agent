@@ -109,7 +109,7 @@ export interface BuilderResumeData {
 export const DEFAULT_SECTION_META: SectionMeta[] = [
   { id: 'personalInfo', key: 'personalInfo', displayName: '基本信息', sectionType: 'personalInfo', isDefault: true, isVisible: true, order: 0 },
   { id: 'education', key: 'education', displayName: '教育经历', sectionType: 'itemList', isDefault: true, isVisible: true, order: 1 },
-  { id: 'workExperience', key: 'workExperience', displayName: '实习经历', sectionType: 'itemList', isDefault: true, isVisible: true, order: 2 },
+  { id: 'workExperience', key: 'workExperience', displayName: '工作经历', sectionType: 'itemList', isDefault: true, isVisible: true, order: 2 },
   { id: 'personalProjects', key: 'personalProjects', displayName: '项目经历', sectionType: 'itemList', isDefault: true, isVisible: true, order: 3 },
   { id: 'openSource', key: 'openSource', displayName: '开源经历', sectionType: 'itemList', isDefault: true, isVisible: true, order: 4 },
   { id: 'skills', key: 'skills', displayName: '专业技能', sectionType: 'stringList', isDefault: true, isVisible: true, order: 5 },

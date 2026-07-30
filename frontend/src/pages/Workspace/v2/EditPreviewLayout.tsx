@@ -43,6 +43,9 @@ interface EditPreviewLayoutProps {
   updateExperience: (experience: Experience) => void;
   deleteExperience: (id: string) => void;
   reorderExperiences: (experiences: Experience[]) => void;
+  updateWorkExperience?: (experience: Experience) => void;
+  deleteWorkExperience?: (id: string) => void;
+  reorderWorkExperiences?: (experiences: Experience[]) => void;
   updateEducation: (education: Education) => void;
   deleteEducation: (id: string) => void;
   reorderEducations: (educations: Education[]) => void;
@@ -127,6 +130,9 @@ export default function EditPreviewLayout(props: EditPreviewLayoutProps) {
     updateExperience,
     deleteExperience,
     reorderExperiences,
+    updateWorkExperience,
+    deleteWorkExperience,
+    reorderWorkExperiences,
     updateEducation,
     deleteEducation,
     reorderEducations,
@@ -292,6 +298,9 @@ export default function EditPreviewLayout(props: EditPreviewLayoutProps) {
                   updateExperience={updateExperience}
                   deleteExperience={deleteExperience}
                   reorderExperiences={reorderExperiences}
+                  updateWorkExperience={updateWorkExperience}
+                  deleteWorkExperience={deleteWorkExperience}
+                  reorderWorkExperiences={reorderWorkExperiences}
                   updateEducation={updateEducation}
                   deleteEducation={deleteEducation}
                   reorderEducations={reorderEducations}

@@ -27,6 +27,13 @@ export const initialResumeData: ResumeData = {
       position: '前端开发实习生',
       date: '2025.06 - 2025.12',
       details: '<ul><li>负责数据看板页面的开发与优化，通过仿滑动和数据缓存存储，使页面加载时间降低60%，熟悉Vue开发状态。</li><li>参与组件库建设，独立开发3个通用业务组件，被团队内其他项目复用15+次，显著提升开发效率。</li></ul>'
+    },
+    {
+      id: '2',
+      company: 'YY互联网公司',
+      position: '前端开发实习生',
+      date: '2024.12 - 2025.05',
+      details: '<ul><li>参与核心应用系统的前端研发，负责常用 UI 组件与交互逻辑的实现。</li><li>配合后端团队完成 API 接口联调，修复性能瓶颈与线上问题。</li></ul>'
     }
   ],
   projects: [

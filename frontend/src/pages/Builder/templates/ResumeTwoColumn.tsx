@@ -290,7 +290,7 @@ export const ResumeTwoColumn: React.FC<ResumeTwoColumnProps> = ({
           {isSectionVisible('workExperience') && workExperience && workExperience.length > 0 && (
             <div className={baseStyles['resume-section']}>
               <h3 className={baseStyles['resume-section-title']}>
-                {getSectionDisplayName('workExperience', '实习经历')}
+                {getSectionDisplayName('workExperience', '工作经历')}
               </h3>
               <div className={baseStyles['resume-items']}>
                 {workExperience.map((exp) => (

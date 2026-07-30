@@ -34,13 +34,24 @@ export const DEFAULT_RESUME_TEMPLATE: ResumeData = {
       visible: true
     }
   ],
+  workExperience: [
+    {
+      id: `work_${Date.now()}_0`,
+      company: "腾讯",
+      position: "后端开发工程师",
+      date: "2025.07 - 至今",
+      details: "<ul class=\"custom-list\"><li><p>负责核心高并发微服务开发与维护，实现分布式缓存防护及 API 网关路由配置</p></li><li><p>主导缓存击穿与雪崩防护优化，提升系统在高并发场景下的服务稳定性</p></li></ul><p></p>",
+      visible: true,
+      companyLogo: "tencent"
+    }
+  ],
   experience: [
     {
       id: `exp_${Date.now()}_0`,
       company: "字节跳动",
       position: "后端开发实习生",
       date: "2025.06 - 2025.10",
-      details: "<ul class=\"custom-list\"><li><p>参与核心业务模块的开发与维护，负责接口设计与实现</p></li><li><p>参与系统性能优化工作，通过代码重构和查询优化提升接口响应速度</p></li><li><p>参与技术方案讨论，协助解决开发过程中遇到的技术问题</p></li></ul><p></p>",
+      details: "<ul class=\"custom-list\"><li><p>参与核心业务模块的开发与维护，负责接口设计与实现</p></li><li><p>参与系统性能优化工作，通过代码重构和查询优化提升接口响应速度</p></li></ul><p></p>",
       visible: true,
       companyLogo: "bytedance"
     },
@@ -49,18 +60,9 @@ export const DEFAULT_RESUME_TEMPLATE: ResumeData = {
       company: "美团",
       position: "后端开发实习生",
       date: "2025.03 - 2025.06",
-      details: "<ul class=\"custom-list\"><li><p>参与新功能模块的开发，负责需求分析、技术方案设计和代码实现</p></li><li><p>参与代码审查，学习并实践代码规范和最佳实践</p></li><li><p>协助团队完成项目交付，参与测试和问题修复工作</p></li></ul><p></p>",
+      details: "<ul class=\"custom-list\"><li><p>参与新功能模块的开发，负责需求分析、技术方案设计和代码实现</p></li><li><p>协助团队完成项目交付，参与测试和问题修复工作</p></li></ul><p></p>",
       visible: true,
       companyLogo: "meituan"
-    },
-    {
-      id: `exp_${Date.now()}_2`,
-      company: "快手",
-      position: "后端开发实习生",
-      date: "2024.12 - 2025.03",
-      details: "<ul class=\"custom-list\"><li><p>参与业务系统开发，熟悉企业级应用开发流程</p></li><li><p>学习并实践常用框架和中间件的使用，提升技术能力</p></li><li><p>参与团队技术分享，学习系统架构设计相关知识</p></li></ul><p></p>",
-      visible: true,
-      companyLogo: "kuaishou"
     }
   ],
   projects: [
@@ -110,13 +112,14 @@ export const DEFAULT_RESUME_TEMPLATE: ResumeData = {
   menuSections: [
     { id: 'basic', title: '基本信息', icon: '👤', enabled: true, order: 0 },
     { id: 'education', title: '教育经历', icon: '🎓', enabled: true, order: 1 },
-    { id: 'experience', title: '实习经历', icon: '💼', enabled: true, order: 2 },
-    { id: 'projects', title: '项目经历', icon: '🚀', enabled: true, order: 3 },
-    { id: 'openSource', title: '开源经历', icon: '🔗', enabled: true, order: 4 },
-    { id: 'skills', title: '专业技能', icon: '⚡', enabled: true, order: 5 },
-    { id: 'awards', title: '荣誉奖项', icon: '🏆', enabled: true, order: 6 },
-    { id: 'selfEvaluation', title: '自我评价', icon: '📝', enabled: true, order: 7 },
-    { id: 'custom_research', title: '竞赛科研', icon: '🔬', enabled: true, order: 8 }
+    { id: 'workExperience', title: '工作经历', icon: '💼', enabled: true, order: 2 },
+    { id: 'experience', title: '实习经历', icon: '🎓', enabled: true, order: 3 },
+    { id: 'projects', title: '项目经历', icon: '🚀', enabled: true, order: 4 },
+    { id: 'openSource', title: '开源经历', icon: '🔗', enabled: true, order: 5 },
+    { id: 'skills', title: '专业技能', icon: '⚡', enabled: true, order: 6 },
+    { id: 'awards', title: '荣誉奖项', icon: '🏆', enabled: true, order: 7 },
+    { id: 'selfEvaluation', title: '自我评价', icon: '📝', enabled: true, order: 8 },
+    { id: 'custom_research', title: '竞赛科研', icon: '🔬', enabled: true, order: 9 }
   ],
   globalSettings: {
     lineHeight: 1.5,

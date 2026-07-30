@@ -852,6 +852,27 @@ def generate_section_custom(
 
     return content
 
+def generate_section_work_experience(resume_data: Dict[str, Any], section_titles: Dict[str, str] = None) -> List[str]:
+    """
+    生成工作经历（2026-07-21 新增的独立板块，与实习经历并行）。
+
+    数据源取 workExperience、标题取 workExperience，其余渲染细节
+    （Logo / 列表类型 / 经历间距 / 公司名字号）整段复用
+    generate_section_internships——两个板块必须长得一模一样，
+    复用而非复制可避免后续改一处漏一处。
+    """
+    items = resume_data.get('workExperience') or []
+    if not isinstance(items, list) or not items:
+        return []
+
+    proxy = dict(resume_data)
+    proxy['internships'] = items
+    titles = dict(section_titles or {})
+    # internships 生成器按 internships → experience 顺序取标题，此处显式覆盖
+    titles['internships'] = titles.get('workExperience') or '工作经历'
+    return generate_section_internships(proxy, titles)
+
+
 """
 Section 生成器映射
 """
@@ -861,6 +882,8 @@ SECTION_GENERATORS = {
     'education': generate_section_education,
     'experience': generate_section_experience,
     'internships': generate_section_internships,
+    'workExperience': generate_section_work_experience,   # 前端字段名
+    'work_experience': generate_section_work_experience,  # 蛇形别名
     'projects': generate_section_projects,
     'skills': generate_section_skills,
     'awards': generate_section_awards,
@@ -873,6 +896,9 @@ SECTION_GENERATORS = {
 默认 section 顺序 - 与 wy.tex 一致
 """
 DEFAULT_SECTION_ORDER = [
+    # 工作经历排在实习之前（与前端 menuSections 顺序一致）；调用方未传
+    # section_order 时走这里，无该板块数据时生成器返回空、不产生空 section
+    'workExperience',
     'internships', 'projects', 'opensource', 'skills', 'education',
     'awards', 'summary'
 ]

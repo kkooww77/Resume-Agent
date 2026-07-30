@@ -304,10 +304,13 @@ RESUME_PATH_ALIASES = {
     "城市": "basic.location",
     "教育": "education",
     "教育经历": "education",
+    # 工作经历与实习经历是两个独立板块（2026-07-21）：别名不可混指，
+    # 否则「改我的实习经历」会被写进工作经历板块
     "工作": "workExperience",
     "工作经历": "workExperience",
-    "实习": "workExperience",
-    "实习经历": "workExperience",
+    "全职": "workExperience",
+    "实习": "experience",
+    "实习经历": "experience",
     "项目": "projects",
     "项目经历": "projects",
     "技能": "skillContent",

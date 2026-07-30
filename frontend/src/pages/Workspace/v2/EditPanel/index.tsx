@@ -28,6 +28,9 @@ interface EditPanelProps {
   updateExperience: (experience: Experience) => void
   deleteExperience: (id: string) => void
   reorderExperiences: (experiences: Experience[]) => void
+  updateWorkExperience?: (experience: Experience) => void
+  deleteWorkExperience?: (id: string) => void
+  reorderWorkExperiences?: (experiences: Experience[]) => void
   updateEducation: (education: Education) => void
   deleteEducation: (id: string) => void
   reorderEducations: (educations: Education[]) => void
@@ -60,6 +63,9 @@ export function EditPanel({
   updateExperience,
   deleteExperience,
   reorderExperiences,
+  updateWorkExperience,
+  deleteWorkExperience,
+  reorderWorkExperiences,
   updateEducation,
   deleteEducation,
   reorderEducations,
@@ -146,6 +152,20 @@ export function EditPanel({
             content={resumeData.selfEvaluation}
             onUpdate={updateSelfEvaluation}
             onAIImport={onAIImport ? () => onAIImport('selfEvaluation') : undefined}
+            resumeData={resumeData}
+          />
+        )
+
+      case 'workExperience':
+        return (
+          <ExperiencePanel
+            experiences={resumeData.workExperience || []}
+            onUpdate={updateWorkExperience || updateExperience}
+            onDelete={deleteWorkExperience || deleteExperience}
+            onReorder={reorderWorkExperiences || reorderExperiences}
+            globalSettings={resumeData.globalSettings}
+            updateGlobalSettings={updateGlobalSettings}
+            onAIImport={onAIImport ? () => onAIImport('workExperience') : undefined}
             resumeData={resumeData}
           />
         )

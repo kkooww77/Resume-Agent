@@ -10,6 +10,7 @@ import type { MenuSection } from '../types'
 /** 默认模块 id：不允许删除，仅支持隐藏 */
 const DEFAULT_SECTION_IDS = new Set([
   'education',
+  'workExperience',
   'experience',
   'projects',
   'openSource',

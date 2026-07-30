@@ -5,11 +5,12 @@
 import type { BasicInfo, GlobalSettings, FieldLabelMode } from '../types'
 
 /** 可设置显示样式的基本信息字段（姓名除外） */
-export type StyleableFieldKey = 'title' | 'birthDate' | 'email' | 'phone' | 'location' | 'blog'
+export type StyleableFieldKey = 'title' | 'birthDate' | 'workYears' | 'email' | 'phone' | 'location' | 'blog'
 
 export const STYLEABLE_FIELDS: StyleableFieldKey[] = [
   'title',
   'birthDate',
+  'workYears',
   'email',
   'phone',
   'location',
@@ -42,6 +43,8 @@ export function fieldTextLabel(
       return '地点'
     case 'blog':
       return '博客'
+    case 'workYears':
+      return '工作年限'
     case 'birthDate':
       return birthDateDisplayMode === 'age' ? '年龄' : '生日'
     default:

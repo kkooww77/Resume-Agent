@@ -132,9 +132,33 @@ Returns the resume content in a structured, readable format."""
                         lines.append(f"  Description: {strip_html(edu.get('description'))}")
                     lines.append("")
 
+        # 工作经历：独立板块（menuSections 里排在实习经历之前），path 前缀不同，
+        # 标注清楚 agent 才能把改写路由回正确板块，不会把工作写进实习。
+        work_experience = resume.get("workExperience", [])
+        if work_experience:
+            lines.append("## Full-time Experience 工作经历  (path prefix: workExperience[N].*)")
+            for i, exp in enumerate(work_experience):
+                details = exp.get("details", "")
+                lines.append(f"### [{i}] {exp.get('company')} | {exp.get('position', '')}")
+                lines.append(f"  Period: {exp.get('date', '')}")
+                if details:
+                    lines.append("  Details:")
+                    body = (
+                        html_to_context_text(str(details))
+                        if re.search(r"<[a-z]", str(details), re.I)
+                        else strip_html(str(details))
+                    )
+                    for detail_line in body.split("\n"):
+                        detail_line = detail_line.strip()
+                        if detail_line:
+                            lines.append(f"  {detail_line}")
+                lines.append("")
+
         experience = resume.get("experience", [])
         if experience:
-            lines.append("## Work Experience  (path prefix: experience[N].*)")
+            # 标题保留 "## Work Experience" 前缀：optimize_progress.OPTIMIZE_MODULES
+            # 用它切分简历文本，改前缀会静默破坏整份优化的模块识别
+            lines.append("## Work Experience 实习经历  (path prefix: experience[N].*)")
             for i, exp in enumerate(experience):
                 details = exp.get("details", "")
                 lines.append(f"### [{i}] {exp.get('company')} | {exp.get('position', '')}")
@@ -214,6 +238,7 @@ Returns the resume content in a structured, readable format."""
             "basic": ("Basic Information", self._format_basic),
             "education": ("Education", self._format_education),
             "experience": ("Work Experience", self._format_experience),
+            "workExperience": ("Full-time Experience", self._format_work_experience),
             "projects": ("Projects", self._format_projects),
             "skills": ("Skills", self._format_skills),
             "awards": ("Awards", self._format_awards),
@@ -270,9 +295,18 @@ Returns the resume content in a structured, readable format."""
         return "\n".join(lines)
 
     def _format_experience(self, resume: dict) -> str:
-        experience = resume.get("experience", [])
+        """实习经历（experience 板块）。"""
+        return self._format_experience_items(resume.get("experience", []), "experience")
+
+    def _format_work_experience(self, resume: dict) -> str:
+        """工作经历（workExperience 板块，与实习并行的独立板块）。"""
+        return self._format_experience_items(
+            resume.get("workExperience", []), "work experience"
+        )
+
+    def _format_experience_items(self, experience: list, label: str) -> str:
         if not experience:
-            return "No experience data."
+            return f"No {label} data."
         lines = []
         for i, exp in enumerate(experience):
             exp = _as_record(exp)

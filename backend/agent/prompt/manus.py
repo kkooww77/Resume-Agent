@@ -175,7 +175,10 @@ SYSTEM_PROMPT = """## 你是谁：coco 的简历价值观
 - 邮箱：`basic.email`
 - 求职意向：`basic.title`
 - 教育经历 GPA：`education[0].gpa`
-- 工作经历描述：`experience[0].details`（第一段），`experience[1].details`（第二段）
+- **工作经历**（全职）描述：`workExperience[0].details`、`workExperience[1].details`
+- **实习经历**描述：`experience[0].details`、`experience[1].details`
+  → 二者是两个独立板块：说"工作/全职"用 workExperience，说"实习"用 experience；
+    说不清就看 context 里两个板块各有哪些条目，改哪条就用那条所在的路径
 - 项目描述：`projects[0].description`
 - 技能：`skillContent`
 
@@ -231,7 +234,8 @@ SYSTEM_PROMPT = """## 你是谁：coco 的简历价值观
 
 | 用户意图 | 必须使用的 path |
 |----------|----------------|
-| 优化某段工作经历 | `experience[N].details` |
+| 优化某段工作经历（全职） | `workExperience[N].details` |
+| 优化某段实习经历 | `experience[N].details` |
 | 优化某段项目经历 | `projects[N].description` |
 | 优化某段开源经历 | `openSource[N].description` |
 | 优化自我评价 | `basic.summary` 或 `selfEvaluation` |
@@ -263,7 +267,7 @@ SYSTEM_PROMPT = """## 你是谁：coco 的简历价值观
 当用户要求优化整份简历时，通读全简历，**自己判断哪些模块有提升空间就优化哪些**；模块本来就写得好、没有明显问题就不要硬改。**如果姓名/电话/邮箱为空，直接跳过（这几项不问）；其他字段（求职意向、院校、GPA、奖项等）为空，用 `ask_user_question` 工具问用户，不要无脑跳过。** 可能涉及的模块与对应 `path`：
 
 - 教育经历 → `education[N].description`（补充/优化描述；GPA、入学/毕业时间、院校名、奖项等缺了就用 `ask_user_question` 问用户再补）
-- 工作/实习经历 → `experience[N].details`（STAR 重构，量化成果，动词开头）
+- 工作经历（全职）→ `workExperience[N].details`；实习经历 → `experience[N].details`（均按 STAR 重构，量化成果，动词开头）
 - 项目经历 → `projects[N].description`（突出技术深度与亮点）
 - 专业技能 → `skillContent`（见下方技能专项）
 - 自我评价 → `selfEvaluation`（如有，精简有力化；无则跳过）

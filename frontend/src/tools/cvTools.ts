@@ -438,10 +438,11 @@ export interface CVBatchEditorParams {
  * 统一后端和前端数据模型之间的字段名差异
  */
 const PATH_MAPPING: Record<string, string> = {
-  'workExperience': 'experience',  // 工作经历
-  'projectExperience': 'projects', // 项目经历
-  'skills': 'skillContent',  // 专业技能
-  'certificates': 'awards',  // 证书荣誉
+  'workExperience': 'workExperience',  // 工作经历
+  'experience': 'experience',          // 实习经历
+  'projectExperience': 'projects',     // 项目经历
+  'skills': 'skillContent',            // 专业技能
+  'certificates': 'awards',            // 证书荣誉
 }
 
 /**

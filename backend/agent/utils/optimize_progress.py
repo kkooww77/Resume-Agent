@@ -26,7 +26,10 @@ from backend.agent.utils.coverage_check import extract_facts
 OPTIMIZE_MODULES: List[Tuple[str, str, str]] = [
     ("basic", "## Basic Information", "基本信息"),
     ("education", "## Education", "教育背景"),
-    ("experience", "## Work Experience", "工作/实习经历"),
+    # 工作经历（全职）：独立板块，标题前缀刻意不含 "## Work Experience"，
+    # 否则会和下面实习经历的切分前缀互相吞并
+    ("workExperience", "## Full-time Experience", "工作经历"),
+    ("experience", "## Work Experience", "实习经历"),
     ("projects", "## Projects", "项目经历"),
     ("openSource", "## Open Source", "开源经历"),
     ("skillContent", "## Skills", "专业技能"),

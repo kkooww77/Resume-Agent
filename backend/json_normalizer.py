@@ -40,6 +40,19 @@ class ResumeNormalizer:
             'summary': [
                 r'个人简介', r'自我评价', r'简介', r'summary', r'profile', r'个人总结'
             ],
+            # 必须排在 experience 之前，且只用锚定正则：字段名 "workexperience"
+            # 含子串 "experience"，落到下面的通用子串匹配会被误判成 experience 并
+            # 改名，导致 PDF 渲染读不到 workExperience、工作经历整段静默丢失
+            # （2026-07-21 端到端实测暴露）。中文"工作经历"仍归 experience，
+            # 保持导入解析链路的既有行为不变。
+            'workExperience': [
+                r'^workexperience$', r'^work_experience$'
+            ],
+            # 同理：字段名含 "work" 会被下面 experience 的 r'work' 子串匹配吞掉，
+            # 曾导致工作年限被当成一条经历（experience:[{title:'3年经验'}]）、PDF 不渲染
+            'workYears': [
+                r'^workyears$', r'^work_years$'
+            ],
             'experience': [
                 r'工作经历', r'工作经验', r'experience', r'work'
             ],

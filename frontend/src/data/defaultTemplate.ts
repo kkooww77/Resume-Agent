@@ -34,6 +34,17 @@ export const DEFAULT_RESUME_TEMPLATE: ResumeData = {
       visible: true
     }
   ],
+  workExperience: [
+    {
+      id: `work_${Date.now()}_0`,
+      company: "腾讯",
+      position: "后端开发工程师",
+      date: "2025.07 - 至今",
+      details: "<ul class=\"custom-list\"><li><p>负责核心高并发微服务开发与维护，实现分布式缓存防护及 API 网关路由配置</p></li><li><p>主导缓存击穿与雪崩防护优化，提升系统在高并发场景下的服务稳定性</p></li></ul><p></p>",
+      visible: true,
+      companyLogo: "tencent"
+    }
+  ],
   experience: [
     {
       id: `exp_${Date.now()}_0`,
@@ -110,13 +121,14 @@ export const DEFAULT_RESUME_TEMPLATE: ResumeData = {
   menuSections: [
     { id: 'basic', title: '基本信息', icon: '👤', enabled: true, order: 0 },
     { id: 'education', title: '教育经历', icon: '🎓', enabled: true, order: 1 },
-    { id: 'experience', title: '实习经历', icon: '💼', enabled: true, order: 2 },
-    { id: 'projects', title: '项目经历', icon: '🚀', enabled: true, order: 3 },
-    { id: 'openSource', title: '开源经历', icon: '🔗', enabled: true, order: 4 },
-    { id: 'skills', title: '专业技能', icon: '⚡', enabled: true, order: 5 },
-    { id: 'awards', title: '荣誉奖项', icon: '🏆', enabled: true, order: 6 },
-    { id: 'selfEvaluation', title: '自我评价', icon: '📝', enabled: true, order: 7 },
-    { id: 'custom_research', title: '竞赛科研', icon: '🔬', enabled: true, order: 8 }
+    { id: 'workExperience', title: '工作经历', icon: '🏢', enabled: true, order: 2 },
+    { id: 'experience', title: '实习经历', icon: '💼', enabled: true, order: 3 },
+    { id: 'projects', title: '项目经历', icon: '🚀', enabled: true, order: 4 },
+    { id: 'openSource', title: '开源经历', icon: '🔗', enabled: true, order: 5 },
+    { id: 'skills', title: '专业技能', icon: '⚡', enabled: true, order: 6 },
+    { id: 'awards', title: '荣誉奖项', icon: '🏆', enabled: true, order: 7 },
+    { id: 'selfEvaluation', title: '自我评价', icon: '📝', enabled: true, order: 8 },
+    { id: 'custom_research', title: '竞赛科研', icon: '🔬', enabled: true, order: 9 }
   ],
   globalSettings: {
     lineHeight: 1.5,

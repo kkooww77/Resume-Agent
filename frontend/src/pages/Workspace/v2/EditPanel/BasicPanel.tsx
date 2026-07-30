@@ -13,7 +13,19 @@ import type { BasicInfo, GlobalSettings, FieldLabelMode } from '../types'
 import Field from './Field'
 import FieldStyleToggle from './FieldStyleToggle'
 import { getAgeFromBirthDate } from '../utils/birthDateDisplay'
-import { resolveFieldMode } from '../utils/fieldDisplayStyle'
+import { resolveFieldMode, fieldTextLabel } from '../utils/fieldDisplayStyle'
+import PortalDropdown from '@/components/common/PortalDropdown'
+
+/** 工作年限下拉选项：value 即简历上的展示文本；空 value = 不展示该字段 */
+const WORK_YEARS_OPTIONS = [
+  { value: '', label: '不展示' },
+  { value: '应届生', label: '应届生' },
+  ...Array.from({ length: 9 }, (_, i) => ({
+    value: `${i + 1}年经验`,
+    label: `${i + 1}年经验`,
+  })),
+  { value: '10年以上经验', label: '10年以上经验' },
+]
 
 interface BasicPanelProps {
   basic: BasicInfo
@@ -179,6 +191,8 @@ const BasicPanel = ({ basic, onUpdate, globalSettings, updateGlobalSettings }: B
       mode={resolveFieldMode(key, globalSettings)}
       onModeChange={(mode) => setFieldMode(key, mode)}
       allowIcon={key === 'blog'}
+      // 提示里给本字段的真实示例（邮箱：xxx / 工作年限：xxx），与渲染前缀同源
+      fieldLabel={fieldTextLabel(key, birthDateDisplayMode)}
     />
   )
 
@@ -250,6 +264,28 @@ const BasicPanel = ({ basic, onUpdate, globalSettings, updateGlobalSettings }: B
                     <option value="age">显示 {ageLabel}</option>
                   </select>
                 </div>
+              </motion.div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: 3.5 * 0.04, ease: 'easeOut' }}
+                className="space-y-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-sm text-gray-600 dark:text-neutral-300">工作年限</label>
+                  {styleToggle('workYears')}
+                </div>
+                <PortalDropdown
+                  value={basic?.workYears || ''}
+                  options={WORK_YEARS_OPTIONS}
+                  placeholder="选择工作年限"
+                  onSelect={(v) => onUpdate({ workYears: v ?? '' })}
+                  triggerClassName="h-11 w-full px-3"
+                  dropdownClassName="min-w-[12rem]"
+                />
               </motion.div>
             </div>
 

@@ -69,7 +69,8 @@ function toPersonalInfo(data: ResumeData): PersonalInfo {
 
 function toWorkExperience(data: ResumeData): Experience[] {
   const globalLogoSize = data.globalSettings?.companyLogoSize ?? DEFAULT_LOGO_SIZE
-  return data.experience
+  const rawList = [...(data.workExperience || []), ...(data.experience || [])]
+  return rawList
     .filter((item) => item.visible !== false)
     .map((item, index) => ({
       id: index,

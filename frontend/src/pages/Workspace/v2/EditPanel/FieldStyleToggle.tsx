@@ -15,10 +15,20 @@ interface FieldStyleToggleProps {
   onModeChange: (mode: FieldLabelMode) => void
   /** 是否提供「图标」档（仅博客/GitHub 这类有真实 fontawesome 图标的字段） */
   allowIcon?: boolean
+  /** 该字段的中文标签（如「邮箱」），用于提示里给出本字段的真实示例；
+   *  取自 fieldTextLabel()，与实际渲染前缀同源，避免提示与效果不一致 */
+  fieldLabel?: string
 }
 
-const BASE_OPTIONS: { mode: FieldLabelMode; Icon: typeof Tag; title: string }[] = [
-  { mode: 'text', Icon: Tag, title: '标签 + 值（如 博客：xxx）' },
+/** 「标签 + 值」的提示按当前字段给例子：邮箱 → 「标签 + 值（邮箱：xxx）」 */
+const buildBaseOptions = (
+  fieldLabel?: string,
+): { mode: FieldLabelMode; Icon: typeof Tag; title: string }[] => [
+  {
+    mode: 'text',
+    Icon: Tag,
+    title: fieldLabel ? `标签 + 值（${fieldLabel}：xxx）` : '标签 + 值（如 博客：xxx）',
+  },
   { mode: 'none', Icon: Minus, title: '仅值（xxx）' },
 ]
 
@@ -43,8 +53,14 @@ function Tip({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function FieldStyleToggle({ mode, onModeChange, allowIcon = false }: FieldStyleToggleProps) {
-  const options = allowIcon ? [ICON_OPTION, ...BASE_OPTIONS] : BASE_OPTIONS
+export default function FieldStyleToggle({
+  mode,
+  onModeChange,
+  allowIcon = false,
+  fieldLabel,
+}: FieldStyleToggleProps) {
+  const baseOptions = buildBaseOptions(fieldLabel)
+  const options = allowIcon ? [ICON_OPTION, ...baseOptions] : baseOptions
   return (
     <div className="flex items-center gap-1">
       <div className="inline-flex items-center rounded-none fresh:rounded-md border border-black fresh:border-slate-200 dark:border-white bg-[#F1F2F5] dark:bg-[#2A2A2A] p-0.5">

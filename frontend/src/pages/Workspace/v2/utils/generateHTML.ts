@@ -431,6 +431,7 @@ export function generateHTMLFile(resumeData: ResumeData): string {
             ${basic.phone ? `<div class="info-item">${escapeHtml(basic.phone)}</div>` : ''}
             ${basic.email ? `<div class="info-item">${escapeHtml(basic.email)}</div>` : ''}
             ${basic.location ? `<div class="info-item">${escapeHtml(basic.location)}</div>` : ''}
+            ${basic.workYears ? `<div class="info-item">${escapeHtml(basic.workYears)}</div>` : ''}
             ${basic.birthDate ? (() => {
               const mode = resumeData.globalSettings?.birthDateDisplayMode || 'birthDate'
               const text = formatBirthDateForHeader(basic.birthDate, mode)

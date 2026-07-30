@@ -32,6 +32,35 @@ _PRIVATE_KEYS = {
 _IDENTITY_CONTAINERS = {"basic", "basics", "contact", "personalinfo", "personal_info"}
 
 
+def _normalize_experience_items(items: Any) -> list:
+    """经历条目归一化：实习(experience/internships)与工作(workExperience)共用。
+
+    兼容后端 internships 形态(title/subtitle/highlights)与工作台形态
+    (company/position/details)，输出统一成工作台字段名。
+    """
+    normalized_items: list = []
+    for item in items or []:
+        experience = _as_record(item)
+        details = experience.get("details") or experience.get("description") or ""
+        highlights = experience.get("highlights")
+        if not details and isinstance(highlights, list):
+            details = "\n".join(str(highlight) for highlight in highlights)
+        normalized_items.append(
+            {
+                **experience,
+                "company": experience.get("company")
+                or experience.get("title")
+                or "未知公司",
+                "position": experience.get("position")
+                or experience.get("subtitle")
+                or "",
+                "date": experience.get("date") or experience.get("period") or "",
+                "details": details,
+            }
+        )
+    return normalized_items
+
+
 def _as_record(item: Any) -> Dict[str, Any]:
     if isinstance(item, dict):
         return item
@@ -81,27 +110,14 @@ def normalize_resume_for_context(resume: Mapping[str, Any]) -> Dict[str, Any]:
             }
         )
 
-    normalized["experience"] = []
-    experience_items = source.get("experience") or source.get("internships", [])
-    for item in experience_items:
-        experience = _as_record(item)
-        details = experience.get("details") or experience.get("description") or ""
-        highlights = experience.get("highlights")
-        if not details and isinstance(highlights, list):
-            details = "\n".join(str(highlight) for highlight in highlights)
-        normalized["experience"].append(
-            {
-                **experience,
-                "company": experience.get("company")
-                or experience.get("title")
-                or "未知公司",
-                "position": experience.get("position")
-                or experience.get("subtitle")
-                or "",
-                "date": experience.get("date") or experience.get("period") or "",
-                "details": details,
-            }
-        )
+    normalized["experience"] = _normalize_experience_items(
+        source.get("experience") or source.get("internships", [])
+    )
+    # 工作经历：独立板块，刻意不并进 experience——agent 要能分清「工作」与「实习」
+    # 才能把改写精准路由回 workExperience[N]，合并会导致写错板块。
+    normalized["workExperience"] = _normalize_experience_items(
+        source.get("workExperience")
+    )
 
     normalized["projects"] = [
         _as_record(item) for item in source.get("projects", [])

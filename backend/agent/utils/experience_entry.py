@@ -315,7 +315,9 @@ def sanitize_resume_payload(resume_data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
-_INDEXED_ARRAY_ITEM_RE = re.compile(r"^(experience|internships|projects|openSource)\[(\d+)\]$")
+_INDEXED_ARRAY_ITEM_RE = re.compile(
+    r"^(workExperience|experience|internships|projects|openSource)\[(\d+)\]$"
+)
 
 
 def is_indexed_array_item_path(path: str) -> bool:

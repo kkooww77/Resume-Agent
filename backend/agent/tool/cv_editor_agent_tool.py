@@ -49,9 +49,12 @@ class CVEditorAgentTool(BaseTool):
 path 必须精确到叶子字段,常用路径:
 - 姓名 basic.name / 手机 basic.phone / 邮箱 basic.email / 求职意向 basic.title
 - 教育 education[0].school|major|degree|gpa
-- 实习/工作经历描述 experience[N].details;项目描述 projects[N].description
+- **工作经历**(全职)描述 workExperience[N].details ← 与实习是两个独立板块,别混
+- **实习经历**描述 experience[N].details;项目描述 projects[N].description
 - 开源经历 openSource[N].description;技能 skillContent
-- 整段追加:path=experience(或 projects/openSource),action=add,value 传完整对象
+- 整段追加:path=workExperience|experience(或 projects/openSource),action=add,value 传完整对象
+- 选板块规则:用户说"工作/全职/正式工作"→ workExperience;说"实习"→ experience;
+  说不清时看 system context 里两个板块各自已有的条目,改哪条就用哪条所在的板块路径
 
 action 语义:update=改现有值;add=向数组追加(value 必须是对象,禁止二次 JSON 编码成字符串);delete=删除。
 

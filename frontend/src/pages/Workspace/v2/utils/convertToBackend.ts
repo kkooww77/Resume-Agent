@@ -19,6 +19,8 @@ export interface BackendResumeData {
     location: string
   }
   employementStatus?: string
+  /** 工作年限（如「3年经验」），后端拼进 contactInfo 的状态位 */
+  workYears?: string
   blog?: string
   objective: string
   summary?: string
@@ -32,6 +34,17 @@ export interface BackendResumeData {
     companyNameFontSize?: number  // 单条经历公司名称字号（px）
     logo?: string  // 公司 Logo key
     logoSize?: number  // 单条经历 Logo 大小（px）
+  }[]
+  /** 工作经历（独立板块，与实习经历并行）。结构与 internships 一致，后端
+   *  generate_section_work_experience 复用同款渲染（Logo/列表类型/间距全一致）。 */
+  workExperience?: {
+    title: string
+    subtitle: string
+    date: string
+    highlights: string[]
+    companyNameFontSize?: number
+    logo?: string
+    logoSize?: number
   }[]
   projects: {
     title: string
@@ -76,6 +89,9 @@ export function convertToBackendFormat(data: ResumeData): BackendResumeData {
   const sectionIdMapping: Record<string, string> = {
     skills: 'skills',
     experience: 'internships',
+    // 工作经历保持自身 id：后端 SECTION_GENERATORS 有同名生成器，
+    // 不能并进 internships（否则两个板块会挤成一段、标题串台）
+    workExperience: 'workExperience',
     projects: 'projects',
     openSource: 'open_source',
     selfEvaluation: 'summary',
@@ -115,12 +131,23 @@ export function convertToBackendFormat(data: ResumeData): BackendResumeData {
       location: data.basic.location,
     },
     ...(employementStatus ? { employementStatus } : {}),
+    ...(data.basic.workYears ? { workYears: data.basic.workYears } : {}),
     ...(data.basic.blog ? { blog: data.basic.blog } : {}),
     objective: data.basic.title,
     summary: data.selfEvaluation || '',
     skillContent: data.skillContent || '',  // 直接传递 HTML 内容
     skills: data.skillContent ? [{ category: '', details: data.skillContent }] : [],  // 兼容旧格式
     internships: data.experience.filter(e => e.visible !== false).map((e) => ({
+      title: stripHtmlTags(e.company),
+      subtitle: stripHtmlTags(e.position),
+      date: e.date,
+      highlights: [e.details],
+      ...(e.companyNameFontSize ? { companyNameFontSize: e.companyNameFontSize } : {}),
+      ...(e.companyLogo ? { logo: e.companyLogo } : {}),
+      ...(e.companyLogoSize ? { logoSize: e.companyLogoSize } : {}),
+    })),
+    // 工作经历：与实习经历同款字段映射（老简历无此字段则为空数组，后端跳过该 section）
+    workExperience: (data.workExperience || []).filter(e => e.visible !== false).map((e) => ({
       title: stripHtmlTags(e.company),
       subtitle: stripHtmlTags(e.position),
       date: e.date,

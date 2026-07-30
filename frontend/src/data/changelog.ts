@@ -15,6 +15,18 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.5.2',
+    date: '2026-07-21',
+    added: [
+      '新增独立的「工作经历」板块，和「实习经历」分开填写，各自成段',
+      '基本信息新增「工作年限」，下拉选择后显示在姓名下方',
+      'AI 助手能分清工作经历与实习经历，让它改哪段就改哪段',
+    ],
+    fixed: [
+      '字段样式切换的提示改为按字段举例（如「邮箱：xxx」），不再一律显示博客',
+    ],
+  },
+  {
     version: '3.5.1',
     date: '2026-07-19',
     added: [

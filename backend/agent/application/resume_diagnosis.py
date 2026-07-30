@@ -50,6 +50,11 @@ def _plain_text(value: Any) -> str:
 
 
 def _entries(resume: Mapping[str, Any], *keys: str) -> List[Mapping[str, Any]]:
+    """取首个命中的 key（多个 key 为同一份数据的别名，如 openSource/open_source）。
+
+    注意语义是「别名二选一」而非合并——需要跨板块合并时在调用点用 `+` 显式拼，
+    见 workExperience（工作）与 experience（实习）的用法。
+    """
     for key in keys:
         value = resume.get(key)
         if isinstance(value, list):
@@ -144,7 +149,11 @@ def build_resume_diagnosis(resume_data: Mapping[str, Any]) -> Dict[str, Any]:
         basic = {}
 
     education = _entries(resume, "education")
-    experience = _entries(resume, "experience", "internships", "workExperience")
+    # 工作经历与实习经历是两个独立板块，诊断按「全部经历」合并统计
+    # （原写法把三者当别名二选一，workExperience 永远读不到 → 整段漏诊断）
+    experience = _entries(resume, "workExperience") + _entries(
+        resume, "experience", "internships"
+    )
     projects = _entries(resume, "projects")
     open_source = _entries(resume, "openSource", "open_source")
     awards = _entries(resume, "awards")

@@ -412,6 +412,16 @@ def json_to_latex(resume_data: Dict[str, Any], section_order: List[str] = None) 
             else:
                 employement_status = f'生日：{employement_status}'
 
+    # 工作年限：\contactInfo 是固定 5 参宏（resume.cls），加参数要改模板、波及所有 PDF，
+    # 故并入第 5 位（同为个人属性），用宏内同款 \textperiodcentered 分隔，视觉一致
+    work_years = _label('workYears', '工作年限：', escape_latex(resume_data.get('workYears') or ''))
+    if work_years:
+        employement_status = (
+            rf'{employement_status} \textperiodcentered\ {work_years}'
+            if employement_status
+            else work_years
+        )
+
     # 有照片时，右侧叠加照片，不改变姓名/联系信息的居中布局
     if resume_data.get("photo"):
         photo_offset_x = _safe_float(resume_data.get("photoOffsetX"), 0.0, -6.0, 6.0)

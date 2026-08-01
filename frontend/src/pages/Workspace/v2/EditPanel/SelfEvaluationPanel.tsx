@@ -2,8 +2,8 @@
  * 自我评价编辑面板
  */
 import { motion } from 'framer-motion'
-import { cn } from '../../../../lib/utils'
 import RichEditor from '../shared/RichEditor'
+import { EDITOR_LABEL_CLASS, EDITOR_PANEL_CLASS } from './editorStyles'
 import type { ResumeData } from '../../types'
 import { AIImportButton } from '@/components/common/AIImportButton'
 
@@ -20,10 +20,7 @@ const SelfEvaluationPanel = ({ content, onUpdate, onAIImport, resumeData }: Self
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className={cn(
-        'space-y-4 px-4 py-4 rounded-none fresh:rounded-md',
-        'bg-white dark:bg-neutral-900/30'
-      )}
+      className={EDITOR_PANEL_CLASS}
     >
       {onAIImport && (
         <AIImportButton
@@ -38,7 +35,7 @@ const SelfEvaluationPanel = ({ content, onUpdate, onAIImport, resumeData }: Self
         transition={{ duration: 0.2, delay: 0.1, ease: 'easeOut' }}
         className="space-y-2"
       >
-        <label className="text-sm text-gray-600 dark:text-neutral-300">
+        <label className={EDITOR_LABEL_CLASS}>
           自我评价
         </label>
         <RichEditor

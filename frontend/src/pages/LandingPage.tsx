@@ -4,7 +4,7 @@ import {
   LogIn,
   LogOut,
   Github,
-  Sparkles,
+  Bot,
   Sun,
   Moon,
   X,
@@ -393,115 +393,127 @@ export default function LandingPage() {
             <BetaBadge className="-ml-1 translate-y-[-6px]" />
           </div>
 
-          <div className="flex items-center gap-1">
-            {/* 界面皮肤:点击弹出选择框(Landing 与 Workspace 共用同一 localStorage + <html> data-skin) */}
-            <button
-              type="button"
-              onClick={() => setShowSkinPicker(true)}
-              className="flex items-center gap-1.5 h-9 px-3 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-700 hover:bg-slate-100 active:translate-y-[1px] fresh:active:translate-y-0 active:translate-x-[1px] fresh:active:translate-x-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm"
-              title="选择界面皮肤"
-              aria-label="界面皮肤"
-            >
-              <Palette className="w-4 h-4 shrink-0 text-[#4285F4]" />
-              <span className="text-sm font-mono fresh:font-sans font-bold uppercase fresh:normal-case">界面皮肤</span>
-            </button>
-            <SkinPickerModal
-              open={showSkinPicker}
-              onPicked={() => setShowSkinPicker(false)}
-              onClose={() => setShowSkinPicker(false)}
-            />
-            {canUseDarkMode && (
-              <button
-                type="button"
-                onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                className="flex items-center justify-center w-9 h-9 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-700 hover:bg-slate-100 active:translate-y-[1px] fresh:active:translate-y-0 active:translate-x-[1px] fresh:active:translate-x-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm"
-                title={isDark ? '切换到浅色模式' : '切换到深色模式'}
+          <div className="flex items-center gap-2">
+            {/* 次要工具统一收进一个容器，避免每个入口都像主按钮。 */}
+            <div className="flex h-10 items-center gap-0.5 border-2 fresh:border border-black fresh:border-slate-200 bg-white p-0.5 shadow-[2px_2px_0px_0px_#000000] fresh:rounded-lg fresh:shadow-sm">
+              <a
+                href={REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden h-8 items-center gap-1.5 bg-black px-2 text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] fresh:rounded-md md:flex"
+                title="在 GitHub 查看项目"
+                aria-label={githubStars === null ? '在 GitHub 查看项目' : `在 GitHub 查看项目，${githubStars.toLocaleString()} 个 Star`}
               >
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-            )}
-            <div className="relative hidden md:block" ref={wechatMenuRef}>
-              <button
-                type="button"
-                onClick={() => setShowWechatCard((prev) => !prev)}
-                className="flex items-center gap-2 h-9 px-3 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-700 hover:bg-slate-100 active:translate-y-[1px] fresh:active:translate-y-0 active:translate-x-[1px] fresh:active:translate-x-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm"
-              >
-                <WechatIcon className="w-4 h-4 shrink-0 text-[#07C160]" />
-                <span className="text-sm font-mono fresh:font-sans font-bold uppercase fresh:normal-case">联系我</span>
-              </button>
-              <AnimatePresence>
-                {showWechatCard && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full z-50 mt-2 w-[220px] border-2 fresh:border border-black fresh:border-slate-200 bg-white shadow-[4px_4px_0px_0px_#000000] fresh:shadow-md"
-                  >
-                    <div className="p-4 border-b-2 border-black fresh:border-slate-200">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-sm font-bold">联系我</div>
-                          <div className="mt-1 text-xs text-slate-500">微信扫码、直接沟通</div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setShowWechatCard(false)}
-                          className="rounded p-1 text-slate-400 hover:bg-slate-100 transition-colors"
-                          aria-label="关闭联系卡片"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <img
-                        src="https://resumecos-1327706280.cos.ap-guangzhou.myqcloud.com/contact-qr.jpg"
-                        alt="微信二维码"
-                        className="w-full object-cover"
-                      />
-                      <div className="mt-3 text-center text-[11px] text-slate-400">
-                        扫码后备注：简历站
-                      </div>
-                    </div>
-                  </motion.div>
+                <Github className="h-4 w-4 shrink-0" />
+                {githubStars !== null && (
+                  <span className="tabular-nums text-xs font-mono fresh:font-sans font-semibold tracking-tight">{githubStars.toLocaleString()}</span>
                 )}
-              </AnimatePresence>
-            </div>
-            <a
-              href={REPO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border border-black fresh:border-slate-200 bg-black text-white hover:bg-slate-800 active:translate-y-[1px] fresh:active:translate-y-0 active:translate-x-[1px] fresh:active:translate-x-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm"
-            >
-              <Github className="w-4 h-4 shrink-0" />
-              {githubStars !== null && (
-                <span className="tabular-nums text-sm font-mono fresh:font-sans font-bold tracking-tight">{githubStars.toLocaleString()}</span>
+              </a>
+              {canUseDarkMode && (
+                <button
+                  type="button"
+                  onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                  className="flex h-8 items-center justify-center gap-1.5 px-2 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] fresh:rounded-md"
+                  title={isDark ? '切换到浅色模式' : '切换到深色模式'}
+                  aria-label={isDark ? '切换到浅色模式' : '切换到深色模式'}
+                >
+                  {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  <span className="hidden text-xs font-medium lg:inline">{isDark ? '浅色' : '深色'}</span>
+                </button>
               )}
-            </a>
+              <div className="relative hidden md:block" ref={wechatMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowWechatCard((prev) => !prev)}
+                  className="flex h-8 items-center justify-center gap-1.5 px-2 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] fresh:rounded-md"
+                  title="联系我"
+                  aria-label="联系我"
+                >
+                  <WechatIcon className="h-4 w-4 shrink-0 text-[#07C160]" />
+                  <span className="hidden text-xs font-medium lg:inline">联系</span>
+                </button>
+                <AnimatePresence>
+                  {showWechatCard && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full z-50 mt-2 w-[220px] border-2 fresh:border border-black fresh:border-slate-200 bg-white shadow-[4px_4px_0px_0px_#000000] fresh:shadow-md"
+                    >
+                      <div className="p-4 border-b-2 border-black fresh:border-slate-200">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-bold">联系我</div>
+                            <div className="mt-1 text-xs text-slate-500">微信扫码、直接沟通</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setShowWechatCard(false)}
+                            className="rounded p-1 text-slate-400 hover:bg-slate-100 transition-colors"
+                            aria-label="关闭联系卡片"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <img
+                          src="https://resumecos-1327706280.cos.ap-guangzhou.myqcloud.com/contact-qr.jpg"
+                          alt="微信二维码"
+                          className="w-full object-cover"
+                        />
+                        <div className="mt-3 text-center text-[11px] text-slate-400">
+                          扫码后备注：简历站
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              {/* 界面皮肤:点击弹出选择框(Landing 与 Workspace 共用同一 localStorage + <html> data-skin) */}
+              <button
+                type="button"
+                onClick={() => setShowSkinPicker(true)}
+                className="flex h-8 items-center justify-center gap-1.5 px-2 text-slate-700 transition-colors hover:bg-[#D7E7FF] hover:text-[#1a73e8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] fresh:rounded-md"
+                title="选择界面皮肤"
+                aria-label="界面皮肤"
+              >
+                <Palette className="h-4 w-4 shrink-0" />
+                <span className="hidden text-xs font-medium lg:inline">皮肤</span>
+              </button>
+              <SkinPickerModal
+                open={showSkinPicker}
+                onPicked={() => setShowSkinPicker(false)}
+                onClose={() => setShowSkinPicker(false)}
+              />
+              <button
+                type="button"
+                onClick={() => navigate('/changelog')}
+                className="hidden h-8 items-center justify-center gap-1.5 px-2 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] fresh:rounded-md md:flex"
+                title="查看更新日志"
+                aria-label="查看更新日志"
+              >
+                <Clock className="w-4 h-4 shrink-0" />
+                <span className="hidden text-xs font-medium lg:inline">更新</span>
+              </button>
+            </div>
             {agentEnabled && (
               <button
                 type="button"
                 onClick={handleOpenAgent}
-className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border border-black fresh:border-slate-200 bg-[#D7E7FF] text-black hover:bg-[#bcdaff] active:translate-y-[1px] fresh:active:translate-y-0 active:translate-x-[1px] fresh:active:translate-x-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm"
-            >
-              <Sparkles className="w-4 h-4 shrink-0" />
-              <span className="text-sm font-mono fresh:font-sans font-bold uppercase fresh:normal-case">AI 助手</span>
-            </button>
+                className="hidden h-10 items-center gap-2 border-2 fresh:border border-black fresh:border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-[2px_2px_0px_0px_#000000] transition-colors hover:bg-[#D7E7FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] fresh:rounded-lg fresh:font-sans fresh:shadow-sm md:flex"
+              >
+                <Bot className="h-4 w-4 shrink-0 text-[#4285F4]" />
+                <span>AI 助手</span>
+              </button>
             )}
             <button
               type="button"
-              onClick={() => navigate('/changelog')}
-              className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-700 hover:bg-slate-100 active:translate-y-[1px] fresh:active:translate-y-0 active:translate-x-[1px] fresh:active:translate-x-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm"
-            >
-              <Clock className="w-4 h-4 shrink-0" />
-              <span className="text-sm font-mono fresh:font-sans font-bold uppercase fresh:normal-case">更新</span>
-            </button>
-            <button
-              type="button"
               onClick={() => navigate('/my-resumes')}
-              className="h-9 inline-flex items-center justify-center px-4 sm:px-5 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-900 font-mono fresh:font-sans font-bold hover:bg-slate-100 active:translate-y-[1px] fresh:active:translate-y-0 active:translate-x-[1px] fresh:active:translate-x-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm"
+              className="inline-flex h-10 items-center justify-center gap-2 border-2 fresh:border border-black fresh:border-[#356fd6] bg-[#4285F4] px-3 text-sm font-bold text-white shadow-[2px_2px_0px_0px_#000000] transition-colors hover:bg-[#3478e5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] focus-visible:ring-offset-2 fresh:rounded-lg fresh:font-sans fresh:shadow-sm sm:px-4"
             >
+              <FileText className="h-4 w-4 shrink-0" />
               我的简历
             </button>
           </div>
@@ -509,11 +521,11 @@ className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border bord
       </nav>
 
       {/* Hero 区域 */}
-      <section className="relative pt-28 pb-16 px-6">
+      <section className="relative px-6 pb-14 pt-24 sm:pt-28">
         <div className="max-w-4xl mx-auto text-center">
           {/* 超大 serif 标题 + mono 标签 */}
-          <motion.div {...popIn} className="border-2 fresh:border border-black fresh:border-slate-200 bg-[#fffdf8] p-8 shadow-[6px_6px_0px_0px_#000000] fresh:shadow-lg dark:border-white dark:bg-slate-900 dark:shadow-[6px_6px_0px_0px_#ffffff]">
-            <div className="mb-5 inline-flex bg-[#D7E7FF] px-2 py-1 text-[10px] font-black uppercase fresh:normal-case tracking-[0.06em] text-[#1a73e8]">
+          <motion.div {...popIn} className="border-2 fresh:border border-black fresh:border-slate-200 bg-[#fffdf8] fresh:bg-white p-8 sm:p-10 shadow-[6px_6px_0px_0px_#000000] fresh:rounded-2xl fresh:shadow-[0_12px_32px_rgba(15,23,42,0.08)] dark:border-white dark:bg-slate-900 dark:shadow-[6px_6px_0px_0px_#ffffff]">
+            <div className="mb-5 inline-flex bg-[#D7E7FF] px-2 py-1 text-[10px] font-black uppercase fresh:rounded-full fresh:normal-case tracking-[0.06em] text-[#1a73e8]">
               // AI RESUME PLATFORM
             </div>
             <motion.h1
@@ -536,9 +548,9 @@ className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border bord
             <motion.div
               {...popIn}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.24 }}
-              className="mt-6 max-w-2xl mx-auto"
+              className="mx-auto mt-5 max-w-3xl"
             >
-              <form onSubmit={handleHeroSubmit} className="relative border-2 fresh:border border-black fresh:border-slate-200 bg-white shadow-[4px_4px_0px_0px_#000000] fresh:shadow-md focus-within:shadow-[2px_2px_0px_0px_#000000] focus-within:translate-x-[2px] focus-within:translate-y-[2px] transition-all dark:border-white dark:bg-slate-900 dark:shadow-[4px_4px_0px_0px_#ffffff] dark:focus-within:shadow-[2px_2px_0px_0px_#ffffff] dark:focus-within:translate-x-[2px] dark:focus-within:translate-y-[2px]">
+              <form onSubmit={handleHeroSubmit} className="relative border-2 fresh:border border-black fresh:border-slate-200 bg-white shadow-[4px_4px_0px_0px_#000000] fresh:rounded-xl fresh:shadow-sm focus-within:shadow-[2px_2px_0px_0px_#000000] fresh:focus-within:border-blue-400 fresh:focus-within:shadow-[0_8px_24px_rgba(59,130,246,0.12)] focus-within:translate-x-[2px] fresh:focus-within:translate-x-0 focus-within:translate-y-[2px] fresh:focus-within:translate-y-0 transition-all dark:border-white dark:bg-slate-900 dark:shadow-[4px_4px_0px_0px_#ffffff] dark:focus-within:shadow-[2px_2px_0px_0px_#ffffff] dark:focus-within:translate-x-[2px] dark:focus-within:translate-y-[2px]">
                 {heroImages.length > 0 && (
                   <div className="flex flex-wrap gap-2 px-4 pt-4">
                     {heroImages.map((file, i) => (
@@ -574,7 +586,7 @@ className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border bord
                   type="submit"
                   aria-label="开始"
                   disabled={!heroInput.trim() && heroImages.length === 0}
-                  className="absolute right-3 bottom-3 h-11 w-11 flex items-center justify-center border-2 fresh:border border-black fresh:border-slate-200 bg-[#D7E7FF] text-black hover:bg-[#bcdaff] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:translate-x-[1px] fresh:active:translate-x-0 active:translate-y-[1px] fresh:active:translate-y-0 active:shadow-none dark:border-white"
+                  className="absolute right-3 bottom-3 h-11 w-11 flex items-center justify-center border-2 fresh:border border-black fresh:border-blue-500 bg-[#D7E7FF] fresh:bg-[#4285F4] text-black fresh:text-white hover:bg-[#bcdaff] fresh:hover:bg-[#3478e5] disabled:opacity-40 disabled:cursor-not-allowed transition-all fresh:rounded-lg active:translate-x-[1px] fresh:active:translate-x-0 active:translate-y-[1px] fresh:active:translate-y-0 active:shadow-none dark:border-white"
                 >
                   <ArrowUpRight className="w-5 h-5" strokeWidth={2.5} />
                 </button>
@@ -586,18 +598,18 @@ className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border bord
                     key={chip}
                     type="button"
                     onClick={() => (chip === JD_OPTIMIZE_CHIP ? startJdOptimize() : startWithText(chip))}
-                    className="px-3.5 py-1.5 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-xs font-mono fresh:font-sans text-slate-700 hover:bg-slate-100 active:translate-x-[1px] fresh:active:translate-x-0 active:translate-y-[1px] fresh:active:translate-y-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:border-white dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:shadow-[2px_2px_0px_0px_#ffffff]"
+                    className="px-3.5 py-1.5 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-xs font-mono fresh:font-sans text-slate-700 hover:bg-slate-100 active:translate-x-[1px] fresh:active:translate-x-0 active:translate-y-[1px] fresh:active:translate-y-0 active:shadow-none transition-all shadow-[2px_2px_0px_0px_#000000] fresh:rounded-full fresh:shadow-none dark:border-white dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:shadow-[2px_2px_0px_0px_#ffffff]"
                   >
                     {chip}
                   </button>
                 ))}
               </div>
 
-              <div className="mt-7">
+              <div className="mt-6">
                 <div className="mb-3 flex items-center justify-center gap-3">
                   <span className="h-px w-8 bg-slate-300 dark:bg-slate-600" />
                   <span className="text-xs font-mono fresh:font-sans font-bold tracking-wide fresh:tracking-normal text-slate-400 dark:text-slate-500">
-                    已有简历？无需 AI，直接开始
+                    已有简历？也可以直接开始
                   </span>
                   <span className="h-px w-8 bg-slate-300 dark:bg-slate-600" />
                 </div>
@@ -605,7 +617,7 @@ className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border bord
                   <button
                     type="button"
                     onClick={() => navigate('/create-new')}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-900 font-bold text-base hover:bg-[#D7E7FF] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all shadow-[4px_4px_0px_0px_#000000] fresh:shadow-md dark:border-white dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 dark:shadow-[4px_4px_0px_0px_#ffffff]"
+                    className="inline-flex h-12 min-w-36 items-center justify-center gap-2 px-5 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-900 font-bold text-sm hover:bg-[#D7E7FF] active:translate-x-[2px] fresh:active:translate-x-0 active:translate-y-[2px] fresh:active:translate-y-0 active:shadow-none transition-all shadow-[4px_4px_0px_0px_#000000] fresh:rounded-lg fresh:shadow-sm dark:border-white dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 dark:shadow-[4px_4px_0px_0px_#ffffff]"
                   >
                     <Upload className="w-5 h-5" strokeWidth={2.5} />
                     直接导入
@@ -613,7 +625,7 @@ className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border bord
                   <button
                     type="button"
                     onClick={() => navigate('/my-resumes')}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-900 font-bold text-base hover:bg-[#D7E7FF] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all shadow-[4px_4px_0px_0px_#000000] fresh:shadow-md dark:border-white dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 dark:shadow-[4px_4px_0px_0px_#ffffff]"
+                    className="inline-flex h-12 min-w-36 items-center justify-center gap-2 px-5 border-2 fresh:border border-black fresh:border-slate-200 bg-white text-slate-900 font-bold text-sm hover:bg-[#D7E7FF] active:translate-x-[2px] fresh:active:translate-x-0 active:translate-y-[2px] fresh:active:translate-y-0 active:shadow-none transition-all shadow-[4px_4px_0px_0px_#000000] fresh:rounded-lg fresh:shadow-sm dark:border-white dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 dark:shadow-[4px_4px_0px_0px_#ffffff]"
                   >
                     <FileText className="w-5 h-5" strokeWidth={2.5} />
                     选择已有简历
@@ -643,7 +655,7 @@ className="hidden md:flex items-center gap-2 h-9 px-3 border-2 fresh:border bord
             href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#1a73e8] dark:hover:text-[#4285F4] transition-colors"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#1a73e8] dark:hover:text-[#4285F4] transition-colors"
           >
             <Star className="w-4 h-4" />
             觉得有用、欢迎在 GitHub 点个 Star

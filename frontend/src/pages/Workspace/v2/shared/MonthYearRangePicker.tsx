@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../../../lib/utils'
+import { EDITOR_CONTROL_CLASS, EDITOR_LABEL_CLASS } from '../EditPanel/editorStyles'
 
 const MONTHS = ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月']
 
@@ -166,7 +167,7 @@ export function MonthYearRangePicker({ value, onChange, label = '起止时间', 
   return (
     <div className={cn('space-y-2', className)}>
       {label && (
-        <label className="text-xs font-medium text-gray-500 dark:text-neutral-400">
+        <label className={EDITOR_LABEL_CLASS}>
           {label}
           <span className="text-red-400 ml-0.5">*</span>
         </label>
@@ -180,19 +181,19 @@ export function MonthYearRangePicker({ value, onChange, label = '起止时间', 
             onClick={(e) => { e.stopPropagation(); setEndOpen(false); setStartOpen((o) => !o) }}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setStartOpen((o) => !o) } }}
             className={cn(
-              'w-full px-3 py-2.5 rounded-lg border text-sm flex items-center justify-between transition-colors',
+              EDITOR_CONTROL_CLASS,
+              'flex cursor-pointer items-center justify-between text-sm transition-colors',
               isInvalidRange && 'border-red-500 dark:border-red-500',
               startOpen
                 ? !isInvalidRange && 'border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/30'
-                : !isInvalidRange && 'border-gray-200 dark:border-neutral-600 hover:border-gray-300 dark:hover:border-neutral-500',
-              'bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 cursor-pointer'
+                : !isInvalidRange && 'hover:border-primary',
             )}
           >
             <span className={cn((!draftStart || !VALID_START.test(draftStart)) && 'text-gray-400 dark:text-neutral-500')}>
               {draftStart && VALID_START.test(draftStart) ? draftStart : '选择开始'}
             </span>
             {draftStart && (
-              <button type="button" onClick={clearStart} className="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-400">
+              <button type="button" onClick={clearStart} aria-label="清除开始时间" className="p-0.5 rounded-none fresh:rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-400">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -209,19 +210,19 @@ export function MonthYearRangePicker({ value, onChange, label = '起止时间', 
             onClick={(e) => { e.stopPropagation(); setStartOpen(false); setEndOpen((o) => !o) }}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEndOpen((o) => !o) } }}
             className={cn(
-              'w-full px-3 py-2.5 rounded-lg border text-sm flex items-center justify-between transition-colors',
+              EDITOR_CONTROL_CLASS,
+              'flex cursor-pointer items-center justify-between text-sm transition-colors',
               isInvalidRange && 'border-red-500 dark:border-red-500',
               endOpen
                 ? !isInvalidRange && 'border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/30'
-                : !isInvalidRange && 'border-gray-200 dark:border-neutral-600 hover:border-gray-300 dark:hover:border-neutral-500',
-              'bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 cursor-pointer'
+                : !isInvalidRange && 'hover:border-primary',
             )}
           >
             <span className={cn((!draftEnd || !isValidEnd(draftEnd)) && 'text-gray-400 dark:text-neutral-500')}>
               {draftEnd && isValidEnd(draftEnd) ? draftEnd : '选择结束'}
             </span>
             {draftEnd && (
-              <button type="button" onClick={clearEnd} className="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-400">
+              <button type="button" onClick={clearEnd} aria-label="清除结束时间" className="p-0.5 rounded-none fresh:rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-400">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -243,15 +244,15 @@ export function MonthYearRangePicker({ value, onChange, label = '起止时间', 
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.15 }}
-                  className="fixed w-64 rounded-xl shadow-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4"
+                  className="fixed w-64 rounded-none fresh:rounded-lg border border-black fresh:border-slate-200 bg-white p-4 shadow-[4px_4px_0px_0px_#000000] fresh:shadow-lg dark:border-white dark:bg-neutral-800 dark:shadow-[4px_4px_0px_0px_#ffffff]"
                   style={{ top: startPos.top, left: startPos.left, zIndex: 10000, pointerEvents: 'auto' }}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <button type="button" onClick={() => setYearStart((y) => y - 1)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700">
+                    <button type="button" aria-label="上一年" onClick={() => setYearStart((y) => y - 1)} className="p-1 rounded-none fresh:rounded-md hover:bg-gray-100 dark:hover:bg-neutral-700">
                       <ChevronLeft className="w-5 h-5 text-gray-500" />
                     </button>
                     <span className="font-medium text-gray-800 dark:text-neutral-200">{yearStart}年</span>
-                    <button type="button" onClick={() => setYearStart((y) => y + 1)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700">
+                    <button type="button" aria-label="下一年" onClick={() => setYearStart((y) => y + 1)} className="p-1 rounded-none fresh:rounded-md hover:bg-gray-100 dark:hover:bg-neutral-700">
                       <ChevronRight className="w-5 h-5 text-gray-500" />
                     </button>
                   </div>
@@ -265,7 +266,7 @@ export function MonthYearRangePicker({ value, onChange, label = '起止时间', 
                           type="button"
                           onClick={() => handleSelectStart(month)}
                           className={cn(
-                            'py-2 rounded-lg text-sm font-medium transition-all',
+                            'py-2 rounded-none fresh:rounded-md text-sm font-medium transition-colors',
                             isSelected
                               ? 'bg-blue-600 text-white'
                               : 'text-gray-600 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400'
@@ -286,15 +287,15 @@ export function MonthYearRangePicker({ value, onChange, label = '起止时间', 
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.15 }}
-                  className="fixed w-64 rounded-xl shadow-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4"
+                  className="fixed w-64 rounded-none fresh:rounded-lg border border-black fresh:border-slate-200 bg-white p-4 shadow-[4px_4px_0px_0px_#000000] fresh:shadow-lg dark:border-white dark:bg-neutral-800 dark:shadow-[4px_4px_0px_0px_#ffffff]"
                   style={{ top: endPos.top, left: endPos.left, zIndex: 10000, pointerEvents: 'auto' }}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <button type="button" onClick={() => setYearEnd((y) => y - 1)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700">
+                    <button type="button" aria-label="上一年" onClick={() => setYearEnd((y) => y - 1)} className="p-1 rounded-none fresh:rounded-md hover:bg-gray-100 dark:hover:bg-neutral-700">
                       <ChevronLeft className="w-5 h-5 text-gray-500" />
                     </button>
                     <span className="font-medium text-gray-800 dark:text-neutral-200">{yearEnd}年</span>
-                    <button type="button" onClick={() => setYearEnd((y) => y + 1)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700">
+                    <button type="button" aria-label="下一年" onClick={() => setYearEnd((y) => y + 1)} className="p-1 rounded-none fresh:rounded-md hover:bg-gray-100 dark:hover:bg-neutral-700">
                       <ChevronRight className="w-5 h-5 text-gray-500" />
                     </button>
                   </div>
@@ -309,7 +310,7 @@ export function MonthYearRangePicker({ value, onChange, label = '起止时间', 
                           type="button"
                           onClick={() => handleSelectEnd(month)}
                           className={cn(
-                            'py-2 rounded-lg text-sm font-medium transition-all',
+                            'py-2 rounded-none fresh:rounded-md text-sm font-medium transition-colors',
                             isSelected
                               ? 'bg-blue-600 text-white'
                               : 'text-gray-600 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400'
@@ -324,7 +325,7 @@ export function MonthYearRangePicker({ value, onChange, label = '起止时间', 
                     type="button"
                     onClick={() => handleSelectEnd('至今')}
                     className={cn(
-                      'w-full mt-3 py-2.5 rounded-lg text-sm font-medium border transition-all',
+                      'w-full mt-3 py-2.5 rounded-none fresh:rounded-md text-sm font-medium border transition-colors',
                       draftEnd === '至今'
                         ? 'bg-blue-600 text-white border-blue-600'
                         : 'border-gray-200 dark:border-neutral-600 text-gray-600 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:border-blue-300'

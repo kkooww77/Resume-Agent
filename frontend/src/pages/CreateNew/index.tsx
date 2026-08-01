@@ -14,12 +14,14 @@ import {
   Wand2,
   Upload,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { setCurrentResumeId } from '@/services/resumeStorage'
 import { cn } from '@/lib/utils'
 
 export default function CreateNew() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnPath = location.state?.from === '/my-resumes' ? '/my-resumes' : '/'
 
   const handleUpload = () => {
     navigate('/my-resumes?openAIImport=1')
@@ -35,7 +37,7 @@ export default function CreateNew() {
     navigate('/workspace/new')
   }
 
-  const handleClose = () => navigate('/')
+  const handleClose = () => navigate(returnPath)
 
   return (
     <div className="min-h-screen bg-[#F0F0E8] fresh:bg-slate-50 text-black font-sans overflow-hidden">
@@ -54,7 +56,7 @@ export default function CreateNew() {
         <motion.button
           whileHover={{ x: -2 }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => navigate('/')}
+          onClick={handleClose}
           className={cn(
             'inline-flex items-center gap-2',
             'font-mono text-xs font-bold uppercase tracking-wide fresh:font-sans fresh:normal-case fresh:tracking-normal',

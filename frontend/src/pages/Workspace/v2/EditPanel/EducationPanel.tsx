@@ -11,6 +11,14 @@ import { useAuth } from '@/contexts/AuthContext'
 import { canUseAdminFeature, getStoredAuthRole } from '@/lib/runtimeEnv'
 import type { Education, ResumeData } from '../types'
 import Field from './Field'
+import {
+  EDITOR_ADD_BUTTON_CLASS,
+  EDITOR_ITEM_BODY_CLASS,
+  EDITOR_ITEM_CLASS,
+  EDITOR_ITEM_HEADER_CLASS,
+  EDITOR_LABEL_CLASS,
+  EDITOR_PANEL_CLASS,
+} from './editorStyles'
 import { MonthYearRangePicker } from '../shared/MonthYearRangePicker'
 import { FontSizePicker } from '../shared/FontSizePicker'
 import {
@@ -417,20 +425,14 @@ const EducationItem = ({
       value={education}
       dragListener={false}
       dragControls={dragControls}
-      className={cn(
-        'rounded-none fresh:rounded-md border overflow-hidden transition-opacity',
-        'bg-white hover:border-primary',
-        'dark:bg-[#1C1C1C]/30 dark:border-white',
-        'border-black fresh:border-slate-200',
-        education.visible === false && 'opacity-40'
-      )}
+      className={cn(EDITOR_ITEM_CLASS, 'hover:border-primary', education.visible === false && 'opacity-40')}
       whileDrag={{ scale: 1.02 }}
     >
       <div className="min-w-0">
         <div
           className={cn(
-            'px-4 py-4 flex items-center justify-between cursor-pointer',
-            expanded && 'bg-[#F1F2F5] dark:bg-[#2A2A2A]/50'
+            EDITOR_ITEM_HEADER_CLASS,
+            expanded && 'bg-[#ECEDE9] fresh:bg-slate-50 dark:bg-[#2A2A2A]/50'
           )}
           onClick={() => setExpanded(!expanded)}
         >
@@ -496,8 +498,7 @@ const EducationItem = ({
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 space-y-4" onClick={(e) => e.stopPropagation()}>
-                <div className="h-px w-full bg-[#F1F2F5] dark:bg-[#2A2A2A]" />
+              <div className={EDITOR_ITEM_BODY_CLASS} onClick={(e) => e.stopPropagation()}>
                 <motion.div
                   ref={headerRef}
                   initial={{ opacity: 0, y: 10 }}
@@ -510,7 +511,7 @@ const EducationItem = ({
                       <div className="space-y-2">
                         <div className="rounded-none fresh:rounded-md border border-black fresh:border-slate-200 bg-[#F1F2F5]/60 p-2 dark:border-white dark:bg-[#1C1C1C]/40">
                           <div className="flex flex-wrap items-center gap-2">
-                            <label className="text-xs font-semibold tracking-wide fresh:tracking-normal text-slate-600 dark:text-neutral-300">
+                            <label className={EDITOR_LABEL_CLASS}>
                               学校 LOGO：
                             </label>
                             <SchoolLogoSelector
@@ -614,7 +615,7 @@ const EducationItem = ({
                         <div className="mb-2 rounded-none fresh:rounded-md border border-black fresh:border-slate-200 bg-[#F1F2F5]/80 p-2.5 dark:border-white dark:bg-[#1C1C1C]/50">
                           <div className="flex flex-wrap items-center gap-2 min-w-0">
                             <div className="flex min-w-0 items-center gap-2">
-                              <label className="shrink-0 text-xs font-semibold tracking-wide fresh:tracking-normal text-slate-600 dark:text-neutral-300">
+                              <label className={cn(EDITOR_LABEL_CLASS, 'shrink-0')}>
                                 学校 LOGO：
                               </label>
                               <SchoolLogoSelector
@@ -727,7 +728,7 @@ const EducationItem = ({
                     transition={{ duration: 0.2, delay: 2 * 0.05, ease: 'easeOut' }}
                     className="space-y-2" ref={degreeWrapRef}
                   >
-                    <label className="text-sm text-gray-600 dark:text-neutral-300">
+                    <label className={EDITOR_LABEL_CLASS}>
                       学历<span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -738,7 +739,7 @@ const EducationItem = ({
                           setDegreeOpen((v) => !v)
                         }}
                         className={cn(
-                          'w-full px-3 py-2 rounded-none fresh:rounded-md border-2 fresh:border text-left flex items-center justify-between',
+                          'w-full min-h-11 px-3 py-2 rounded-none fresh:rounded-md border text-left flex items-center justify-between',
                           'bg-white border-black fresh:border-slate-200 text-gray-700',
                           'dark:bg-[#1C1C1C] dark:border-white dark:text-neutral-200',
                           'focus:outline-none focus:ring-2 focus:ring-blue-700 fresh:focus:ring-blue-200 focus:border-black fresh:focus:border-blue-400',
@@ -847,7 +848,7 @@ const EducationPanel = ({
   }
 
   return (
-    <div className={cn('space-y-4 px-4 py-4 rounded-none fresh:rounded-md', 'bg-white dark:bg-[#1C1C1C]/30')}>
+    <div className={EDITOR_PANEL_CLASS}>
       {onAIImport && (
         <AIImportButton 
           onClick={onAIImport}
@@ -874,13 +875,7 @@ const EducationPanel = ({
 
       <button
         onClick={handleCreate}
-        className={cn(
-          'w-full px-4 py-3 rounded-none fresh:rounded-md border-2 fresh:border border-dashed',
-          'border-black fresh:border-slate-200 dark:border-white',
-          'hover:border-primary hover:bg-primary/5',
-          'flex items-center justify-center gap-2',
-          'text-gray-500 dark:text-neutral-400'
-        )}
+        className={EDITOR_ADD_BUTTON_CLASS}
       >
         <PlusCircle className="w-4 h-4" />
         添加教育经历

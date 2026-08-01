@@ -81,7 +81,7 @@ export const useDashboardLogic = () => {
 
   const createResume = () => {
     // 跳转到创建选择页面
-    navigate('/create-new')
+    navigate('/create-new', { state: { from: '/my-resumes' } })
   };
 
   /** 删除单个简历 */

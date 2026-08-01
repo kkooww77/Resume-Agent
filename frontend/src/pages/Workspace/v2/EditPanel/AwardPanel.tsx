@@ -2,12 +2,24 @@
  * 荣誉奖项面板
  */
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { PlusCircle, Wand2, ChevronDown, Eye, Trash2 } from 'lucide-react'
+import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion'
+import { PlusCircle, ChevronDown, Eye, Trash2, GripVertical } from 'lucide-react'
 import { cn } from '../../../../lib/utils'
 import type { Award } from '../types'
 import Field from './Field'
+import {
+  EDITOR_ADD_BUTTON_CLASS,
+  EDITOR_CONTROL_CLASS,
+  EDITOR_DRAG_HINT_CLASS,
+  EDITOR_INSET_CLASS,
+  EDITOR_ITEM_BODY_CLASS,
+  EDITOR_ITEM_CLASS,
+  EDITOR_ITEM_HEADER_CLASS,
+  EDITOR_LABEL_CLASS,
+  EDITOR_PANEL_CLASS,
+} from './editorStyles'
 import MonthYearPicker from '../shared/MonthYearPicker'
+import { AIImportButton } from '@/components/common/AIImportButton'
 
 const AWARD_LEVEL_OPTIONS = ['', '校级', '省级', '市级', '国家级'] as const
 
@@ -36,28 +48,36 @@ function AwardItem({
   onDelete: (id: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const dragControls = useDragControls()
 
   const handleChange = (field: keyof Award, value: string | boolean) => {
     onUpdate({ ...award, [field]: value })
   }
 
   return (
-    <div
-      className={cn(
-        'rounded-none fresh:rounded-md border overflow-hidden transition-opacity',
-        'bg-white hover:border-primary',
-        'dark:bg-neutral-900/30 dark:border-white dark:hover:border-primary',
-        'border-black fresh:border-slate-200',
-        award.visible === false && 'opacity-40'
-      )}
+    <Reorder.Item
+      id={award.id}
+      value={award}
+      dragListener={false}
+      dragControls={dragControls}
+      className={cn(EDITOR_ITEM_CLASS, 'hover:border-primary', award.visible === false && 'opacity-40')}
+      whileDrag={{ scale: 1.02 }}
     >
       <div className="min-w-0">
         {/* 标题行 */}
         <div
-          className={cn('px-4 py-4 flex items-center justify-between cursor-pointer select-none', expanded && 'bg-[#F1F2F5] dark:bg-neutral-800/50')}
+          className={cn(EDITOR_ITEM_HEADER_CLASS, expanded && 'bg-[#ECEDE9] fresh:bg-slate-50 dark:bg-neutral-800/50')}
           onClick={() => setExpanded(!expanded)}
         >
-          <div className="flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div
+              onPointerDown={(event) => dragControls.start(event)}
+              onClick={(event) => event.stopPropagation()}
+              className="-ml-1 flex w-6 shrink-0 touch-none items-center justify-center rounded-none fresh:rounded-md cursor-grab hover:bg-[#E5E5E0] fresh:hover:bg-slate-100 dark:hover:bg-neutral-800/50"
+              title="拖拽调整顺序"
+            >
+              <GripVertical className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
+            </div>
             <h3 className={cn('font-medium truncate', 'text-gray-700 dark:text-neutral-200')}>
               {award.title || '未命名奖项'}
             </h3>
@@ -98,8 +118,7 @@ function AwardItem({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 space-y-4" onClick={(e) => e.stopPropagation()}>
-                <div className="h-px w-full bg-gray-100 dark:bg-neutral-800" />
+              <div className={EDITOR_ITEM_BODY_CLASS} onClick={(e) => e.stopPropagation()}>
                 <div className="space-y-5">
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -114,16 +133,11 @@ function AwardItem({
                       transition={{ duration: 0.2, delay: 1 * 0.05, ease: 'easeOut' }}
                       className="space-y-2"
                     >
-                      <label className="text-sm text-gray-600 dark:text-neutral-300">级别</label>
+                      <label className={EDITOR_LABEL_CLASS}>级别</label>
                       <select
                         value={award.issuer || ''}
                         onChange={(e) => handleChange('issuer', e.target.value)}
-                        className={cn(
-                          'w-full px-3 py-2 rounded-none fresh:rounded-md border',
-                          'bg-white border-black fresh:border-slate-200 text-gray-700',
-                          'dark:bg-[#1C1C1C] dark:border-white dark:text-neutral-200',
-                          'focus:outline-none focus:ring-2 focus:ring-blue-700 fresh:focus:ring-blue-200 focus:border-black fresh:focus:border-blue-400'
-                        )}
+                        className={EDITOR_CONTROL_CLASS}
                       >
                         <option value="">请选择级别</option>
                         {AWARD_LEVEL_OPTIONS.filter((v) => v).map((option) => (
@@ -138,6 +152,7 @@ function AwardItem({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: 2 * 0.05, ease: 'easeOut' }}
+                    className="grid grid-cols-2 gap-4"
                   >
                     <MonthYearPicker
                       label="获奖时间"
@@ -153,7 +168,7 @@ function AwardItem({
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </Reorder.Item>
   )
 }
 
@@ -179,8 +194,10 @@ export default function AwardPanel({
   }
 
   return (
-    <div className={cn('space-y-4 px-4 py-4 rounded-none fresh:rounded-md', 'bg-white dark:bg-neutral-900/30')}>
-      <div className="flex items-center justify-between gap-3 p-3 rounded-none fresh:rounded-md border border-slate-200 dark:border-white bg-white dark:bg-neutral-900/30">
+    <div className={EDITOR_PANEL_CLASS}>
+      {onAIImport && <AIImportButton onClick={onAIImport} className="w-full" />}
+
+      <div className={cn(EDITOR_INSET_CLASS, 'flex items-center justify-between gap-3')}>
         <div className="text-sm font-medium text-gray-700 dark:text-neutral-200">
           列表样式
         </div>
@@ -192,7 +209,7 @@ export default function AwardPanel({
               'px-3 py-1.5 rounded-none fresh:rounded-md text-xs font-semibold border transition-colors',
               awardsListType === 'unordered'
                 ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-black dark:border-white'
-                : 'bg-white dark:bg-neutral-900/30 text-gray-700 dark:text-neutral-200 border-slate-200 dark:border-white hover:bg-slate-50 dark:hover:bg-neutral-800/60',
+                : 'bg-white dark:bg-neutral-900/30 text-gray-700 dark:text-neutral-200 border-black fresh:border-slate-200 dark:border-white hover:bg-slate-50 dark:hover:bg-neutral-800/60',
             )}
           >
             无序列表
@@ -204,7 +221,7 @@ export default function AwardPanel({
               'px-3 py-1.5 rounded-none fresh:rounded-md text-xs font-semibold border transition-colors',
               awardsListType === 'ordered'
                 ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-black dark:border-white'
-                : 'bg-white dark:bg-neutral-900/30 text-gray-700 dark:text-neutral-200 border-slate-200 dark:border-white hover:bg-slate-50 dark:hover:bg-neutral-800/60',
+                : 'bg-white dark:bg-neutral-900/30 text-gray-700 dark:text-neutral-200 border-black fresh:border-slate-200 dark:border-white hover:bg-slate-50 dark:hover:bg-neutral-800/60',
             )}
           >
             有序列表
@@ -212,32 +229,20 @@ export default function AwardPanel({
         </div>
       </div>
 
-      {onAIImport && (
-        <button
-          onClick={onAIImport}
-          className="w-full px-4 py-2 rounded-none fresh:rounded-md bg-white text-black border border-slate-300 hover:bg-slate-50 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff] transition-all duration-300 flex items-center justify-center gap-2"
-        >
-          <Wand2 className="w-4 h-4" />
-          AI 导入荣誉奖项
-        </button>
-      )}
+      <div className={EDITOR_DRAG_HINT_CLASS}>
+        <GripVertical className="h-3.5 w-3.5" />
+        可拖拽调整顺序
+      </div>
 
-      <div className="space-y-3">
+      <Reorder.Group axis="y" values={awards} onReorder={onReorder} className="space-y-3">
         {awards.map((item) => (
           <AwardItem key={item.id} award={item} onUpdate={onUpdate} onDelete={onDelete} />
         ))}
-      </div>
+      </Reorder.Group>
 
       <button
         onClick={handleCreate}
-        className={cn(
-          'w-full px-4 py-3 rounded-none fresh:rounded-md border-2 fresh:border border-dashed',
-          'border-black fresh:border-slate-200 dark:border-white',
-          'hover:border-primary hover:bg-primary/5',
-          'transition-colors duration-200',
-          'flex items-center justify-center gap-2',
-          'text-gray-500 dark:text-neutral-400'
-        )}
+        className={EDITOR_ADD_BUTTON_CLASS}
       >
         <PlusCircle className="w-4 h-4" />
         添加荣誉奖项

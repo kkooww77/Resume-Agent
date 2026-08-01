@@ -45,7 +45,7 @@ function Tip({ label, children }: { label: string; children: ReactNode }) {
       {children}
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-none fresh:rounded-md border border-black fresh:border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 opacity-0 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff] transition-opacity duration-150 group-hover/tip:opacity-100 dark:border-white dark:bg-slate-800 dark:text-slate-200"
+        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-none fresh:rounded-md border border-black fresh:border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 opacity-0 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff] transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 dark:border-white dark:bg-slate-800 dark:text-slate-200"
       >
         {label}
       </span>
@@ -69,14 +69,16 @@ export default function FieldStyleToggle({
             <button
               type="button"
               onClick={() => onModeChange(m)}
+              aria-label={title}
+              aria-pressed={mode === m}
               className={cn(
-                'inline-flex h-6 w-6 items-center justify-center rounded-none fresh:rounded-md transition-all active:scale-90',
+                'inline-flex h-6 w-6 items-center justify-center rounded-none fresh:rounded-md transition-[transform,box-shadow,background-color,color] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1',
                 mode === m
                   ? 'bg-white dark:bg-[#2A2A2A] text-blue-600 dark:text-blue-400 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]'
                   : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300',
               )}
             >
-              <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+              <Icon aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={2.25} />
             </button>
           </Tip>
         ))}

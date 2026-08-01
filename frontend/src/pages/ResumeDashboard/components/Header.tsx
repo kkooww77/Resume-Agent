@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { getCurrentResumeId } from "@/services/resumeStorage";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import UserMenu from "@/components/UserMenu";
-import { Plus, Upload, Trash2, FileText, Sparkles, Download } from "./Icons";
+import { Plus, Upload, Trash2, Sparkles, Download } from "./Icons";
+import { Palette } from "lucide-react";
+import SkinPickerModal from "@/pages/Workspace/v2/components/SkinPickerModal";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -49,10 +49,10 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectAll,
   onClearSelection,
 }) => {
-  const navigate = useNavigate();
   const allSelected = totalCount > 0 && selectedCount === totalCount;
 
   const [importMenuOpen, setImportMenuOpen] = useState(false);
+  const [skinPickerOpen, setSkinPickerOpen] = useState(false);
   const importMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,14 +72,14 @@ export const Header: React.FC<HeaderProps> = ({
   }, [importMenuOpen]);
 
   return (
-    <div className="border-b border-black fresh:border-slate-200 p-8 md:p-12 shrink-0 bg-[#F6F3EC] fresh:bg-slate-50 dark:bg-[#1C1C1C] relative z-30 flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+    <div className="border-b border-black fresh:border-slate-200 px-0 pb-6 shrink-0 bg-[#F6F3EC] fresh:bg-white dark:bg-[#1C1C1C] relative z-30 flex flex-col lg:flex-row lg:items-start justify-between gap-4">
       {/* 左侧标题区：复刻自 /builder/dashboard */}
       <div>
-        <h1 className="font-sans text-5xl md:text-7xl text-slate-800 dark:text-white tracking-tight leading-[0.95] uppercase">
-          Dashboard
+        <h1 className="font-serifcn fresh:font-hero text-3xl md:text-4xl font-black fresh:font-bold text-slate-800 dark:text-white tracking-tight leading-none">
+          我的简历
         </h1>
-        <p className="mt-6 text-sm font-mono text-[#3367D6] uppercase tracking-wide max-w-md font-bold">
-          {'// '}选择一份简历 · 进入 Workspace
+        <p className="mt-2 text-sm font-mono fresh:font-sans text-[#3367D6] fresh:text-slate-500 tracking-normal max-w-md font-medium">
+          共 {totalCount} 份简历，选择一份继续编辑
         </p>
       </div>
 
@@ -150,7 +150,25 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
 
-        <div className="h-8 w-px bg-black mx-1 hidden sm:block" />
+        <div className="h-8 w-px bg-black fresh:bg-slate-200 mx-1 hidden sm:block" />
+
+        <Button
+          type="button"
+          onClick={() => setSkinPickerOpen(true)}
+          variant="outline"
+          title="切换界面皮肤（NEO / 清新）"
+          aria-label="界面皮肤"
+          className="h-11 px-5"
+        >
+          <Palette className="mr-2 h-4 w-4 text-[#4285F4]" />
+          界面皮肤
+        </Button>
+
+        <SkinPickerModal
+          open={skinPickerOpen}
+          onPicked={() => setSkinPickerOpen(false)}
+          onClose={() => setSkinPickerOpen(false)}
+        />
 
         {/* 统一导入下拉：AI 智能上传 / JSON 导入 */}
         {(onAIImport || onImport) && (
@@ -158,7 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => setImportMenuOpen((v) => !v)}
               className={cn(
-                "px-5 py-2.5 rounded-none fresh:rounded-lg text-sm font-mono uppercase tracking-wide transition-[transform,box-shadow,background-color] duration-100 ease-out flex items-center gap-2 h-11",
+                "px-5 py-2.5 rounded-none fresh:rounded-md text-sm font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal transition-[transform,box-shadow,background-color] duration-150 ease-out flex items-center gap-2 h-11",
                 "bg-[#F0F0E8] fresh:bg-slate-50 border border-black fresh:border-slate-200 text-black shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm",
                 "hover:bg-[#E5E5E0] hover:translate-y-[1px] hover:translate-x-[1px] hover:shadow-none",
                 "active:translate-y-[2px] active:translate-x-[2px]"
@@ -169,17 +187,17 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {importMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-[#F0F0E8] fresh:bg-slate-50 rounded-none fresh:rounded-lg shadow-[4px_4px_0px_0px_#000000] fresh:shadow-md border border-black fresh:border-slate-200 overflow-hidden z-50">
+              <div className="absolute top-full right-0 mt-2 w-48 bg-[#F0F0E8] fresh:bg-white rounded-none fresh:rounded-md shadow-[4px_4px_0px_0px_#000000] fresh:shadow-lg border border-black fresh:border-slate-200 overflow-hidden z-50">
                 {onAIImport && (
                   <button
                     onClick={() => {
                       setImportMenuOpen(false);
                       onAIImport();
                     }}
-                    className="w-full px-4 py-3 text-left text-sm font-mono uppercase tracking-wide text-black hover:bg-[#E5E5E0] flex items-center gap-2"
+                    className="w-full px-4 py-3 text-left text-sm font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal text-black hover:bg-[#E5E5E0] fresh:hover:bg-slate-50 flex items-center gap-2"
                   >
                     <Sparkles className="w-4 h-4 text-black" />
-                    AI 智能上传
+                    AI 导入
                   </button>
                 )}
                 {onImport && (
@@ -188,7 +206,7 @@ export const Header: React.FC<HeaderProps> = ({
                       setImportMenuOpen(false);
                       onImport();
                     }}
-                    className="w-full px-4 py-3 text-left text-sm font-mono uppercase tracking-wide text-black hover:bg-[#E5E5E0] flex items-center gap-2 border-t border-black fresh:border-slate-200"
+                    className="w-full px-4 py-3 text-left text-sm font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal text-black hover:bg-[#E5E5E0] fresh:hover:bg-slate-50 flex items-center gap-2 border-t border-black fresh:border-slate-200"
                   >
                     <Upload className="w-4 h-4 text-[#4285F4]" />
                     JSON 导入
@@ -198,20 +216,6 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
         )}
-
-        {/* 进入 Workspace：解析到具体简历（有 current 带 id，否则新建），
-            不走裸 /workspace 依赖全局草稿——避免删简历后显示幽灵简历 */}
-        <Button
-          onClick={() => {
-            const currentId = getCurrentResumeId();
-            navigate(currentId ? `/workspace/${currentId}` : "/workspace/new");
-          }}
-          variant="outline"
-          className="h-11 px-5"
-        >
-          <FileText className="mr-2 h-4 w-4" />
-          进入 Workspace
-        </Button>
 
         {/* 创建按钮 */}
         <Button

@@ -50,10 +50,10 @@ function DropdownSelect<T extends string | number>({
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          'w-full px-3 py-2.5 text-sm rounded-none fresh:rounded-md border text-left flex items-center justify-between gap-2 transition-all duration-300',
+          'w-full px-3 py-2.5 text-sm rounded-none fresh:rounded-md border text-left flex items-center justify-between gap-2 transition-[border-color,background-color,color] duration-200',
           'border-black fresh:border-slate-200 bg-white text-slate-800',
-          'hover:border-black fresh:hover:border-slate-300 hover:shadow-[4px_4px_0px_0px_#000000] dark:hover:shadow-[4px_4px_0px_0px_#ffffff] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-black fresh:focus:border-blue-400',
-          open && 'ring-2 ring-[#1a73e8] border-black fresh:border-slate-200 shadow-[4px_4px_0px_0px_#000000] fresh:shadow-md dark:shadow-[4px_4px_0px_0px_#ffffff]'
+          'hover:border-black fresh:hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-black fresh:focus:border-blue-400',
+          open && 'ring-2 ring-[#1a73e8] border-black fresh:border-blue-400'
         )}
       >
         <span className="truncate">{currentLabel}</span>

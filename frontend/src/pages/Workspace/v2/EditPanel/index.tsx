@@ -266,8 +266,8 @@ export function EditPanel({
         {/* 模块标题 */}
         <div
           className={cn(
-            'mb-4 p-4 rounded-none fresh:rounded-md border',
-            'bg-white border-black fresh:border-slate-200',
+            'mb-4 p-4 rounded-none border fresh:border-x-0 fresh:border-t-0',
+            'bg-white fresh:bg-transparent border-black fresh:border-slate-200',
             'dark:bg-[#1C1C1C] dark:border-white'
           )}
         >

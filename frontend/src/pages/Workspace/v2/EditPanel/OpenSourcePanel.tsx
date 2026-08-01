@@ -8,6 +8,14 @@ import { cn } from '../../../../lib/utils'
 import type { OpenSource, GlobalSettings, ResumeData } from '../types'
 import { AIImportButton } from '@/components/common/AIImportButton'
 import Field from './Field'
+import {
+  EDITOR_ADD_BUTTON_CLASS,
+  EDITOR_ITEM_BODY_CLASS,
+  EDITOR_ITEM_CLASS,
+  EDITOR_ITEM_HEADER_CLASS,
+  EDITOR_LABEL_CLASS,
+  EDITOR_PANEL_CLASS,
+} from './editorStyles'
 import { MonthYearRangePicker } from '../shared/MonthYearRangePicker'
 
 interface OpenSourcePanelProps {
@@ -54,19 +62,13 @@ function OpenSourceItem({
       value={openSource}
       dragListener={false}
       dragControls={dragControls}
-      className={cn(
-        'rounded-none fresh:rounded-md border overflow-hidden transition-opacity',
-        'bg-white hover:border-primary',
-        'dark:bg-neutral-900/30 dark:border-white dark:hover:border-primary',
-        'border-black fresh:border-slate-200',
-        openSource.visible === false && 'opacity-40'
-      )}
+      className={cn(EDITOR_ITEM_CLASS, 'hover:border-primary', openSource.visible === false && 'opacity-40')}
       whileDrag={{ scale: 1.02 }}
     >
       <div className="min-w-0">
         {/* 标题行 */}
         <div
-          className={cn('px-4 py-4 flex items-center justify-between cursor-pointer select-none', expanded && 'bg-[#F1F2F5] dark:bg-neutral-800/50')}
+          className={cn(EDITOR_ITEM_HEADER_CLASS, expanded && 'bg-[#ECEDE9] fresh:bg-slate-50 dark:bg-neutral-800/50')}
           onClick={() => setExpanded(!expanded)}
         >
           <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -120,8 +122,7 @@ function OpenSourceItem({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 space-y-4" onClick={(e) => e.stopPropagation()}>
-                <div className="h-px w-full bg-gray-100 dark:bg-neutral-800" />
+              <div className={EDITOR_ITEM_BODY_CLASS} onClick={(e) => e.stopPropagation()}>
                 <div className="space-y-5">
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -144,7 +145,7 @@ function OpenSourceItem({
                       transition={{ duration: 0.2, delay: 2 * 0.05, ease: 'easeOut' }}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-medium text-gray-500 dark:text-neutral-400">仓库地址</label>
+                        <label className={EDITOR_LABEL_CLASS}>仓库地址</label>
                         {updateGlobalSettings && (
                           <div className="flex items-center gap-1 bg-[#F1F2F5] dark:bg-[#2A2A2A] rounded-none fresh:rounded-md p-0.5">
                             {([
@@ -273,11 +274,10 @@ export default function OpenSourcePanel({ openSources, onUpdate, onDelete, onReo
   }
 
   return (
-    <div className={cn('space-y-4 px-4 py-4 rounded-none fresh:rounded-md', 'bg-white dark:bg-neutral-900/30')}>
+    <div className={EDITOR_PANEL_CLASS}>
       {onAIImport && (
         <AIImportButton
           onClick={onAIImport}
-          text="AI 导入开源经历"
           className="w-full"
         />
       )}
@@ -295,14 +295,7 @@ export default function OpenSourcePanel({ openSources, onUpdate, onDelete, onReo
 
       <button
         onClick={handleCreate}
-        className={cn(
-          'w-full px-4 py-3 rounded-none fresh:rounded-md border-2 fresh:border border-dashed',
-          'border-black fresh:border-slate-200 dark:border-white',
-          'hover:border-primary hover:bg-primary/5',
-          'transition-colors duration-200',
-          'flex items-center justify-center gap-2',
-          'text-gray-500 dark:text-neutral-400'
-        )}
+        className={EDITOR_ADD_BUTTON_CLASS}
       >
         <PlusCircle className="w-4 h-4" />
         添加开源经历

@@ -10,8 +10,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { uploadUserPhoto, listUserPhotos, type UserPhoto } from '@/services/photoService'
 import { InlineDatePicker } from '@/components/InlineDatePicker'
 import type { BasicInfo, GlobalSettings, FieldLabelMode } from '../types'
-import Field from './Field'
 import FieldStyleToggle from './FieldStyleToggle'
+import { BASIC_INFO_CONTROL_CLASS, BasicInfoField, BasicInfoInput } from './BasicInfoField'
 import { getAgeFromBirthDate } from '../utils/birthDateDisplay'
 import { resolveFieldMode, fieldTextLabel } from '../utils/fieldDisplayStyle'
 import PortalDropdown from '@/components/common/PortalDropdown'
@@ -55,7 +55,7 @@ function PhotoSlider({
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2">
-        <label className="text-[10px] font-medium text-slate-500 uppercase fresh:normal-case tracking-wide fresh:tracking-normalr fresh:tracking-normal">{label}</label>
+        <label className="text-[10px] font-medium text-slate-500 uppercase fresh:normal-case tracking-wide fresh:tracking-normal">{label}</label>
         <span className="font-mono fresh:font-sans text-[11px] text-slate-500 tabular-nums shrink-0">{format(value)}</span>
       </div>
       {hint && <p className="text-[10px] text-slate-400 leading-snug">{hint}</p>}
@@ -175,11 +175,15 @@ const BasicPanel = ({ basic, onUpdate, globalSettings, updateGlobalSettings }: B
   const photoWidthCm = basic?.photoWidthCm ?? 3
   const photoHeightCm = basic?.photoHeightCm ?? 3
   const birthDateDisplayMode = globalSettings?.birthDateDisplayMode || 'birthDate'
-  const birthDateLabel = basic?.birthDate?.trim() || '2003-05'
-  const ageLabel = (() => {
-    const age = getAgeFromBirthDate(basic?.birthDate || '')
-    return age !== null ? `${age} 岁` : '23 岁'
-  })()
+  const birthDateValue = basic?.birthDate?.trim() || ''
+  const birthAge = getAgeFromBirthDate(birthDateValue)
+  const now = new Date()
+  const latestBirthMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const birthDateIsInvalid = Boolean(birthDateValue && birthAge === null)
+  const birthDateNeedsReview = birthAge !== null && birthAge < 14
+  const birthDisplayPreview = birthDateDisplayMode === 'age'
+    ? (birthAge !== null ? `${birthAge} 岁` : '暂无法计算')
+    : (birthDateValue || '尚未填写')
 
   // 每字段「显示样式」切换：mode 落 globalSettings.fieldLabelModes（标签 + 值 / 仅值）
   const setFieldMode = (key: string, mode: FieldLabelMode) =>
@@ -205,125 +209,168 @@ const BasicPanel = ({ basic, onUpdate, globalSettings, updateGlobalSettings }: B
         transition={{ duration: 0.25, ease: 'easeOut' }}
         className="space-y-4"
       >
-        <h3 className="font-medium text-neutral-900 dark:text-neutral-200">
-          基础字段
-        </h3>
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_168px]">
+          <div className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+            <BasicInfoInput
+              label="姓名"
+              name="name"
+              autoComplete="name"
+              value={basic?.name || ''}
+              onValueChange={(value) => onUpdate({ name: value })}
+              placeholder="请输入姓名"
+            />
+            <BasicInfoInput
+              label="职位"
+              name="job-title"
+              autoComplete="organization-title"
+              value={basic?.title || ''}
+              onValueChange={(value) => onUpdate({ title: value })}
+              placeholder="请输入目标职位"
+              actions={styleToggle('title')}
+            />
 
-        <div className="flex flex-col xl:flex-row items-start gap-6">
-          <div className="flex-1 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Field
-                index={0}
-                label="姓名"
-                value={basic?.name || ''}
-                onChange={(value) => onUpdate({ name: value })}
-                placeholder="请输入姓名"
-              />
-              <Field
-                index={1}
-                label="职位"
-                value={basic?.title || ''}
-                onChange={(value) => onUpdate({ title: value })}
-                placeholder="请输入目标职位"
-                labelExtra={styleToggle('title')}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: 3 * 0.04, ease: 'easeOut' }}
-                className="space-y-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <label className="text-sm text-gray-600 dark:text-neutral-300">年龄</label>
-                  {styleToggle('birthDate')}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 min-w-0">
-                    <InlineDatePicker
-                      value={basic?.birthDate || null}
-                      placeholder="选择年月"
-                      onSelect={(value) => onUpdate({ birthDate: value ?? '' })}
-                    />
+            <div className="min-w-0 sm:col-span-2">
+              <div className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex h-8 items-center">
+                    <label
+                      htmlFor="basic-info-birth-date"
+                      className="font-mono fresh:font-sans text-xs fresh:text-sm font-bold fresh:font-medium text-[#444850] fresh:text-slate-600 dark:text-slate-300"
+                    >
+                      出生年月
+                    </label>
                   </div>
-                  <select
-                    value={birthDateDisplayMode}
-                    onChange={(e) => updateGlobalSettings?.({ birthDateDisplayMode: e.target.value as 'birthDate' | 'age' })}
-                    className={cn(
-                      'h-11 rounded-none fresh:rounded-md border-2 fresh:border px-3 text-sm font-semibold',
-                      'bg-white dark:bg-[#1C1C1C]',
-                      'border-black fresh:border-slate-200 dark:border-white',
-                      'text-slate-700 dark:text-slate-200',
-                      'focus:outline-none focus:ring-2 focus:ring-blue-700 fresh:focus:ring-blue-200 focus:border-black fresh:focus:border-blue-400'
-                    )}
-                    title="选择渲染方式"
-                  >
-                    <option value="birthDate">显示 {birthDateLabel}</option>
-                    <option value="age">显示 {ageLabel}</option>
-                  </select>
+                  <InlineDatePicker
+                    triggerId="basic-info-birth-date"
+                    triggerClassName={BASIC_INFO_CONTROL_CLASS}
+                    value={birthDateValue || null}
+                    placeholder="请选择出生年月"
+                    maxValue={latestBirthMonth}
+                    defaultYearOffset={-22}
+                    initialView="year"
+                    onSelect={(value) => onUpdate({ birthDate: value ?? '' })}
+                  />
                 </div>
-              </motion.div>
+
+                <div className="min-w-0 space-y-2">
+                  <div className="flex h-8 items-center justify-between gap-2">
+                    <span className="font-mono fresh:font-sans text-xs fresh:text-sm font-bold fresh:font-medium text-[#444850] fresh:text-slate-600 dark:text-slate-300">
+                      简历中显示
+                    </span>
+                    <div className="shrink-0">{styleToggle('birthDate')}</div>
+                  </div>
+                  <div
+                    className="grid h-11 grid-cols-2 gap-1 rounded-none fresh:rounded-md border border-black fresh:border-slate-200 bg-[#F1F1EC] fresh:bg-slate-50 p-1 dark:border-white dark:bg-[#171717]"
+                    role="group"
+                    aria-label="出生年月展示方式"
+                  >
+                    {([
+                      ['age', '年龄'],
+                      ['birthDate', '出生年月'],
+                    ] as const).map(([mode, label]) => {
+                      const active = birthDateDisplayMode === mode
+                      return (
+                        <button
+                          key={mode}
+                          type="button"
+                          aria-pressed={active}
+                          disabled={mode === 'age' && birthDateIsInvalid}
+                          onClick={() => updateGlobalSettings?.({ birthDateDisplayMode: mode })}
+                          className={cn(
+                            'min-w-0 rounded-none fresh:rounded-[3px] px-2 text-xs font-bold fresh:font-medium transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40',
+                            active
+                              ? 'bg-[#4285F4] text-white shadow-[1px_1px_0_0_#000] fresh:bg-blue-50 fresh:text-blue-700 fresh:ring-1 fresh:ring-inset fresh:ring-blue-200 fresh:shadow-none dark:bg-[#4285F4] dark:text-white dark:shadow-[1px_1px_0_0_#fff] fresh:dark:bg-blue-950/50 fresh:dark:text-blue-300 fresh:dark:ring-blue-800'
+                              : 'bg-transparent text-slate-600 fresh:hover:bg-white dark:text-slate-300 dark:fresh:hover:bg-slate-800'
+                          )}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div
+                  className={cn(
+                    'sm:col-span-2 flex min-h-5 items-start gap-1.5 text-xs leading-5',
+                    birthDateIsInvalid
+                      ? 'text-red-600 dark:text-red-400'
+                      : birthDateNeedsReview
+                        ? 'text-amber-700 dark:text-amber-400'
+                        : 'text-slate-400 dark:text-slate-500'
+                  )}
+                  role={birthDateIsInvalid ? 'alert' : undefined}
+                >
+                  {birthDateIsInvalid
+                    ? '出生年月不能晚于当前月份，请重新选择。'
+                    : birthDateNeedsReview
+                      ? `当前计算为 ${birthAge} 岁，请确认出生年份是否正确。`
+                      : `当前预览：${birthDisplayPreview}`}
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: 3.5 * 0.04, ease: 'easeOut' }}
-                className="space-y-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <label className="text-sm text-gray-600 dark:text-neutral-300">工作年限</label>
-                  {styleToggle('workYears')}
-                </div>
+            <BasicInfoField label="工作年限" actions={styleToggle('workYears')}>
+              {(controlId) => (
                 <PortalDropdown
+                  triggerId={controlId}
                   value={basic?.workYears || ''}
                   options={WORK_YEARS_OPTIONS}
                   placeholder="选择工作年限"
-                  onSelect={(v) => onUpdate({ workYears: v ?? '' })}
-                  triggerClassName="h-11 w-full px-3"
+                  onSelect={(value) => onUpdate({ workYears: value ?? '' })}
+                  triggerClassName={BASIC_INFO_CONTROL_CLASS}
+                  triggerLabelClassName="text-[15px] font-normal"
                   dropdownClassName="min-w-[12rem]"
                 />
-              </motion.div>
-            </div>
+              )}
+            </BasicInfoField>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Field
-                index={4}
-                label="邮箱"
-                value={basic?.email || ''}
-                onChange={(value) => onUpdate({ email: value })}
-                placeholder="请输入邮箱"
-                labelExtra={styleToggle('email')}
-              />
-              <Field
-                index={5}
-                label="电话"
-                value={basic?.phone || ''}
-                onChange={(value) => onUpdate({ phone: value })}
-                placeholder="请输入电话"
-                labelExtra={styleToggle('phone')}
-              />
-            </div>
-
-            <Field
-              index={6}
+            <BasicInfoInput
               label="地址"
+              name="location"
+              autoComplete="address-level2"
               value={basic?.location || ''}
-              onChange={(value) => onUpdate({ location: value })}
+              onValueChange={(value) => onUpdate({ location: value })}
               placeholder="请输入所在城市"
-              labelExtra={styleToggle('location')}
+              actions={styleToggle('location')}
             />
 
-            <Field
-              index={7}
+            <BasicInfoInput
+              label="邮箱"
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              spellCheck={false}
+              value={basic?.email || ''}
+              onValueChange={(value) => onUpdate({ email: value })}
+              placeholder="请输入邮箱"
+              actions={styleToggle('email')}
+            />
+            <BasicInfoInput
+              label="电话"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={basic?.phone || ''}
+              onValueChange={(value) => onUpdate({ phone: value })}
+              placeholder="请输入电话"
+              actions={styleToggle('phone')}
+            />
+
+            <BasicInfoInput
               label="博客/GitHub"
+              name="website"
+              type="url"
+              inputMode="url"
+              autoComplete="url"
+              spellCheck={false}
               value={basic?.blog || ''}
-              onChange={(value) => onUpdate({ blog: value })}
-              placeholder="如：https://github.com/you 或 https://blog.example.com"
-              labelExtra={styleToggle('blog')}
+              onValueChange={(value) => onUpdate({ blog: value })}
+              placeholder="如：https://github.com/you"
+              actions={styleToggle('blog')}
+              fieldClassName="sm:col-span-2"
             />
           </div>
 
@@ -331,12 +378,12 @@ const BasicPanel = ({ basic, onUpdate, globalSettings, updateGlobalSettings }: B
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: 7 * 0.04, ease: 'easeOut' }}
-            className="w-full xl:w-[180px] shrink-0"
+            className="w-full min-w-0"
           >
             <div className="rounded-none fresh:rounded-md border-2 fresh:border border-black fresh:border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-sm font-semibold text-slate-800">
-                  照片设置
+                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  照片（可选）
                 </div>
                 {hasPhoto && (
                   <button
@@ -362,7 +409,7 @@ const BasicPanel = ({ basic, onUpdate, globalSettings, updateGlobalSettings }: B
                 onClick={handleSelectPhoto}
                 disabled={uploading}
                 className={cn(
-                  'w-full h-48 rounded-none fresh:rounded-md border-2 fresh:border border-dashed flex flex-col items-center justify-center gap-2 transition-all',
+                  'w-full h-40 rounded-none fresh:rounded-md border-2 fresh:border border-dashed flex flex-col items-center justify-center gap-2 transition-[border-color,color,background-color,opacity]',
                   isAuthenticated
                     ? 'border-black fresh:border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600 hover:bg-slate-50/60'
                     : 'border-black fresh:border-slate-200 text-slate-300',
@@ -383,7 +430,7 @@ const BasicPanel = ({ basic, onUpdate, globalSettings, updateGlobalSettings }: B
                     ) : (
                       <Upload className="w-6 h-6" />
                     )}
-                    <span className="text-xs font-medium">上传照片</span>
+                    <span className="text-xs font-medium">{isAuthenticated ? '上传照片' : '登录后上传'}</span>
                   </>
                 )}
               </button>

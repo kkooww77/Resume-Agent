@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../../../lib/utils'
+import { EDITOR_CONTROL_CLASS, EDITOR_LABEL_CLASS } from '../EditPanel/editorStyles'
 
 const MONTHS = ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月']
 const VALID_MONTH = /^\d{4}-\d{2}$/
@@ -92,7 +93,7 @@ export function MonthYearPicker({
 
   return (
     <div className={cn('space-y-2', className)}>
-      {label && <label className="text-sm text-gray-600 dark:text-neutral-300">{label}</label>}
+      {label && <label className={EDITOR_LABEL_CLASS}>{label}</label>}
       <div className="relative" ref={triggerRef}>
         <div
           role="button"
@@ -108,11 +109,11 @@ export function MonthYearPicker({
             }
           }}
           className={cn(
-            'w-full px-3 py-2 rounded-md border text-sm flex items-center justify-between transition-colors',
+            EDITOR_CONTROL_CLASS,
+            'flex cursor-pointer items-center justify-between text-sm transition-colors',
             open
               ? 'border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/30'
-              : 'border-gray-200 dark:border-neutral-800 hover:border-gray-300 dark:hover:border-neutral-700',
-            'bg-white dark:bg-neutral-900 text-gray-700 dark:text-neutral-200 cursor-pointer'
+              : 'hover:border-primary'
           )}
         >
           <span className={cn(!draft && 'text-gray-400 dark:text-neutral-500')}>{draft || placeholder}</span>
@@ -120,7 +121,8 @@ export function MonthYearPicker({
             <button
               type="button"
               onClick={handleClear}
-              className="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-400"
+              aria-label="清除时间"
+              className="p-0.5 rounded-none fresh:rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-400"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -138,13 +140,14 @@ export function MonthYearPicker({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.98 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute rounded-lg border bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-700 shadow-lg p-3 w-[220px]"
+                  className="absolute w-[220px] rounded-none fresh:rounded-lg border border-black fresh:border-slate-200 bg-white p-3 shadow-[4px_4px_0px_0px_#000000] fresh:shadow-lg dark:border-white dark:bg-neutral-900 dark:shadow-[4px_4px_0px_0px_#ffffff]"
                   style={{ top: popupPos.top, left: popupPos.left, pointerEvents: 'auto' }}
                 >
                   <div className="flex items-center justify-between mb-2 px-1">
                     <button
                       type="button"
-                      className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
+                      aria-label="上一年"
+                      className="p-1 rounded-none fresh:rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
                       onClick={() => setYear((y) => y - 1)}
                     >
                       <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-neutral-300" />
@@ -152,7 +155,8 @@ export function MonthYearPicker({
                     <div className="text-sm font-semibold text-gray-800 dark:text-neutral-100">{year}年</div>
                     <button
                       type="button"
-                      className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
+                      aria-label="下一年"
+                      className="p-1 rounded-none fresh:rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800"
                       onClick={() => setYear((y) => y + 1)}
                     >
                       <ChevronRight className="w-4 h-4 text-gray-600 dark:text-neutral-300" />
@@ -170,7 +174,7 @@ export function MonthYearPicker({
                           type="button"
                           onClick={() => handleSelectMonth(monthNum)}
                           className={cn(
-                            'h-8 rounded-md text-sm transition-colors',
+                            'h-8 rounded-none fresh:rounded-md text-sm transition-colors',
                             active
                               ? 'bg-blue-600 text-white'
                               : 'text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800'

@@ -7,6 +7,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { Bold } from 'lucide-react'
 import { cn } from '../../../../lib/utils'
+import { EDITOR_CONTROL_CLASS, EDITOR_LABEL_CLASS } from './editorStyles'
 
 interface BoldInputProps {
   value: string
@@ -139,7 +140,7 @@ const BoldInput: React.FC<BoldInputProps> = ({
   return (
     <div className="space-y-2">
       {label && (
-        <label className="font-mono fresh:font-sans text-xs fresh:text-sm font-bold fresh:font-normal text-[#444850] fresh:text-gray-600 dark:text-neutral-300">
+        <label className={EDITOR_LABEL_CLASS}>
           {label}
         </label>
       )}
@@ -156,10 +157,7 @@ const BoldInput: React.FC<BoldInputProps> = ({
           }}
           data-placeholder={placeholder}
           className={cn(
-            'w-full px-3 py-2 rounded-none fresh:rounded-md border-2 fresh:border min-h-[38px]',
-            'bg-white border-black fresh:border-slate-200 text-gray-700',
-            'dark:bg-[#1C1C1C] dark:border-white dark:text-neutral-200',
-            'focus:outline-none focus:ring-2 focus:ring-blue-700 fresh:focus:ring-blue-200 focus:border-black fresh:focus:border-blue-400',
+            EDITOR_CONTROL_CLASS,
             '[&_strong]:font-bold [&_b]:font-bold',
             effectiveControlsLayout === 'overlay' ? (rightActions ? 'pr-40' : 'pr-10') : 'pr-3',
             className

@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { canUseAdminFeature, getStoredAuthRole } from '@/lib/runtimeEnv'
 import type { Experience, ResumeData, GlobalSettings } from '../types'
 import Field from './Field'
+import { EDITOR_INSET_CLASS, EDITOR_ITEM_BODY_CLASS, EDITOR_ITEM_CLASS, EDITOR_ITEM_HEADER_CLASS, EDITOR_LABEL_CLASS } from './editorStyles'
 import { MonthYearRangePicker } from '../shared/MonthYearRangePicker'
 import { FontSizePicker } from '../shared/FontSizePicker'
 import {
@@ -397,10 +398,10 @@ const ExperienceEditor = ({
           className={cn('grid gap-4', isCompactLayout ? 'grid-cols-1' : 'grid-cols-2')}
         >
           <div>
-            <div className="mb-2 rounded-none fresh:rounded-md border border-slate-200/80 bg-slate-50/80 p-2.5 dark:border-white dark:bg-neutral-900/50">
+            <div className={cn(EDITOR_INSET_CLASS, 'mb-2')}>
               <div className={cn('min-w-0', isCompactLayout ? 'space-y-2' : 'flex items-center gap-2')}>
                 <div className={cn('min-w-0', isCompactLayout ? 'space-y-2' : 'contents')}>
-                  <label className="shrink-0 text-xs font-semibold tracking-wide fresh:tracking-normal text-slate-600 dark:text-neutral-300">公司 LOGO：</label>
+                  <label className={cn(EDITOR_LABEL_CLASS, 'shrink-0')}>公司 LOGO：</label>
                   <div className={cn(isCompactLayout ? 'flex items-center gap-2' : 'contents')}>
                     <LogoSelector
                       selectedKey={experience.companyLogo}
@@ -569,20 +570,14 @@ const ExperienceItem = ({
       value={experience}
       dragListener={false}
       dragControls={dragControls}
-      className={cn(
-        'rounded-none fresh:rounded-md border-2 fresh:border overflow-hidden transition-opacity',
-        'bg-white hover:border-primary',
-        'dark:bg-neutral-900/30 dark:border-white dark:hover:border-primary',
-        'border-black fresh:border-slate-200',
-        !experience.visible && 'opacity-40'
-      )}
+      className={cn(EDITOR_ITEM_CLASS, 'hover:border-primary', !experience.visible && 'opacity-40')}
       whileDrag={{ scale: 1.02 }}
     >
       <div className="min-w-0">
         <div
           className={cn(
-            'px-4 py-4 flex items-center justify-between cursor-pointer select-none',
-            expanded && 'bg-[#F1F2F5] dark:bg-neutral-800/50'
+            EDITOR_ITEM_HEADER_CLASS,
+            expanded && 'bg-[#ECEDE9] fresh:bg-slate-50 dark:bg-neutral-800/50'
           )}
           onClick={() => setExpanded(!expanded)}
         >
@@ -646,8 +641,7 @@ const ExperienceItem = ({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 space-y-4" onClick={(e) => e.stopPropagation()}>
-                <div className={cn('h-px w-full', 'bg-[#F1F2F5] dark:bg-[#2A2A2A]')} />
+              <div className={EDITOR_ITEM_BODY_CLASS} onClick={(e) => e.stopPropagation()}>
                 <ExperienceEditor experience={experience} onSave={onUpdate} resumeData={resumeData} globalSettings={globalSettings} updateGlobalSettings={updateGlobalSettings} />
               </div>
             </motion.div>

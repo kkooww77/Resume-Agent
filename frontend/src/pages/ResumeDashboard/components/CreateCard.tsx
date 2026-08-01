@@ -11,39 +11,37 @@ interface CreateCardProps {
 export const CreateCard: React.FC<CreateCardProps> = ({ onClick }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: 2, x: 2, transition: { duration: 0.1 } }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
       onClick={onClick}
       className="relative group"
     >
       <Card
         className={cn(
-          "relative overflow-hidden cursor-pointer h-[380px] flex flex-col rounded-none fresh:rounded-lg border-2 border-dashed border-black fresh:border-slate-200 transition-[box-shadow,transform] duration-100",
-          "bg-[#F0F0E8] fresh:bg-slate-50",
-          "hover:bg-[#E5E5E0] group-hover:shadow-none"
+          "relative overflow-hidden cursor-pointer h-[340px] flex flex-col rounded-none fresh:rounded-md border-2 fresh:border border-dashed border-black fresh:border-slate-300 transition-[box-shadow,transform,background-color] duration-150",
+          "bg-[#F2F1EA] fresh:bg-white",
+          "hover:bg-[#E5E5E0] fresh:hover:bg-slate-50 group-hover:shadow-none fresh:group-hover:shadow-md"
         )}
       >
         <CardContent className="flex-1 pt-6 text-center flex flex-col items-center justify-center h-full z-10">
           <motion.div
-            className="mb-6 p-6 rounded-none fresh:rounded-lg bg-[#4285F4] text-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm border-2 fresh:border border-black fresh:border-slate-200 fresh:border-slate-200"
-            whileHover={{ x: 1, y: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            className="mb-4 p-3 rounded-none fresh:rounded-md bg-[#4285F4] fresh:bg-blue-600 text-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none border-2 fresh:border border-black fresh:border-blue-600"
           >
-            <Plus className="h-10 w-10 text-white" />
+            <Plus className="h-6 w-6 text-white" />
           </motion.div>
 
-          <CardTitle className="text-2xl font-sans font-black tracking-tight text-slate-700">
+          <CardTitle className="text-lg font-sans font-semibold tracking-tight text-black fresh:text-slate-800">
             新建简历
           </CardTitle>
 
-          <CardDescription className="mt-3 text-sm font-mono text-[#6B7280] max-w-[160px]">
-            开启你的职业新篇章：从这里开始。
+          <CardDescription className="mt-2 text-sm font-mono fresh:font-sans text-black/50 fresh:text-slate-500 max-w-[180px]">
+            从空白内容开始
           </CardDescription>
         </CardContent>
 
         {/* 装饰线 */}
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-black transform translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-black fresh:hidden transform translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
       </Card>
     </motion.div>
   )

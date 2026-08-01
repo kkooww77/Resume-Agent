@@ -335,18 +335,18 @@ export default function WorkspaceV2() {
       {/* 首次进入且从未选过皮肤:弹选择框 */}
       <SkinPickerModal open={showSkinPicker} onPicked={() => setShowSkinPicker(false)} />
 
-      {/* 装饰头(照搬 Builder 风格):大标题与「编辑模式+名字」同一行(返回 Dashboard 已去掉,左侧栏「我的简历」可回),纯展示,操作按钮在预览工具栏 */}
-      <div className="border-b border-black fresh:border-slate-200 dark:border-white bg-[#F0F0E8] fresh:bg-slate-50 dark:bg-[#1C1C1C] px-6 py-3 md:px-8 shrink-0">
+      {/* 工作区标题：NEO 保留海报感，Fresh 使用克制的产品工具栏层级 */}
+      <div className="border-b border-black fresh:border-slate-200 dark:border-white bg-[#F0F0E8] fresh:bg-white dark:bg-[#1C1C1C] px-6 py-3 md:px-8 shrink-0">
         <div className="flex items-baseline gap-4 flex-wrap">
-          <h1 className="font-serif text-2xl md:text-3xl text-black dark:text-white tracking-tight leading-none uppercase fresh:normal-case">
+          <h1 className="font-mono fresh:font-hero text-[28px] font-black fresh:font-bold uppercase fresh:normal-case text-black fresh:text-slate-900 dark:text-white tracking-[-0.04em] fresh:tracking-[-0.025em] leading-none">
             Resume Builder
           </h1>
           <div className="flex items-center gap-3">
-            <p className="text-sm font-mono fresh:font-sans text-blue-700 uppercase fresh:normal-case tracking-wide fresh:tracking-normal font-bold">
-              {'// '}编辑模式
+            <p className="text-sm font-mono fresh:font-sans text-blue-700 fresh:text-slate-500 tracking-normal font-medium">
+              正在编辑
             </p>
             {resumeData?.basic?.name && (
-              <span className="font-mono fresh:font-sans text-xs text-[#444850] fresh:text-gray-600 dark:text-neutral-300 border border-black fresh:border-slate-200 dark:border-white bg-white dark:bg-[#2A2A2A] px-2 py-1">
+              <span className="font-mono fresh:font-sans text-xs text-[#444850] fresh:text-gray-600 dark:text-neutral-300 border border-black fresh:border-slate-200 dark:border-white bg-white dark:bg-[#2A2A2A] px-2 py-1 fresh:rounded-md">
                 {resumeData.basic.name}
               </span>
             )}

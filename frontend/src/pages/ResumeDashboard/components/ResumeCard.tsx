@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Copy } from 'lucide-react'
+import { Copy, Pin } from 'lucide-react'
 import { Card, CardContent, CardTitle, CardDescription, CardFooter } from './ui/card'
 import { Button } from './ui/button'
 import { FileText, Trash2 } from './Icons'
@@ -83,10 +83,10 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ y: 2, x: 2, transition: { duration: 0.1 } }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
       className="relative group"
     >
       {typeof index === 'number' && index > 0 && (
@@ -98,10 +98,10 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
         >
           <div
             className={cn(
-              'h-7 min-w-7 px-2 rounded-none fresh:rounded-lg flex items-center justify-center',
+              'h-7 min-w-7 px-2 rounded-none fresh:rounded-md flex items-center justify-center',
               'border border-black fresh:border-slate-200 bg-slate-100 text-slate-600',
               'text-xs font-mono font-bold tracking-tight',
-              'shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm'
+              'shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none'
             )}
             title={`第 ${index} 个`}
           >
@@ -136,27 +136,27 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
 
       <Card
         className={cn(
-          "relative overflow-visible min-h-[380px] flex flex-col transition-[box-shadow,transform] duration-100",
-          "group-hover:shadow-none",
-          resume.pinned && "shadow-[4px_4px_0px_0px_rgba(66,133,244,0.35)] border-[#4285F4]/50",
+          "relative overflow-visible h-[340px] flex flex-col transition-[border-color,box-shadow,transform] duration-150",
+          "bg-[#F2F1EA] fresh:bg-white",
+          "group-hover:shadow-none fresh:group-hover:border-blue-200 fresh:group-hover:shadow-md",
+          resume.pinned && "fresh:border-blue-200 fresh:shadow-[0_4px_14px_rgba(66,133,244,0.14)]",
           isMultiSelectMode && isSelected && "shadow-[4px_4px_0px_0px_#0ea5e9] border-sky-500"
         )}
       >
-        <CardContent className="relative flex-1 min-h-0 pt-12 text-center flex flex-col items-center z-10">
+        <CardContent className="relative flex-1 min-h-0 pt-9 text-center flex flex-col items-center z-10">
           <motion.div
-            className="mb-6 p-6 rounded-none fresh:rounded-lg bg-[#F0F0E8] fresh:bg-slate-50 text-black shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm border-2 fresh:border border-black fresh:border-slate-200 fresh:border-slate-200"
-            whileHover={{ x: 1, y: 1 }}
+            className="mb-4 p-3 rounded-none fresh:rounded-md bg-[#E7E6DE] fresh:bg-slate-50 text-black shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none border-2 fresh:border border-black fresh:border-slate-200"
           >
-            <FileText className="h-12 w-12" />
+            <FileText className="h-7 w-7" />
           </motion.div>
 
-          <CardTitle className="text-2xl font-sans font-black tracking-tight line-clamp-1 text-slate-700 px-6 mb-2">
+          <CardTitle className="min-h-7 max-w-full text-xl leading-7 font-sans font-semibold tracking-tight line-clamp-1 text-black fresh:text-slate-800 px-6 mb-2">
             {resume.name || "未命名简历"}
           </CardTitle>
           
           {/* 备注/别名区域 */}
           <div 
-            className="px-6 mb-4 min-h-[28px] flex items-center justify-center"
+            className="px-6 mb-3 min-h-[28px] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             {isEditingAlias ? (
@@ -180,10 +180,10 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
               <button
                 onClick={() => setIsEditingAlias(true)}
                 className={cn(
-                  "text-sm px-3 py-1 rounded-none fresh:rounded-lg transition-all duration-200 font-mono uppercase tracking-wide",
+                  "text-sm px-3 py-1 rounded-none fresh:rounded-md transition-all duration-200 font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal",
                   resume.alias
                     ? "bg-[#E5E5E0] text-black border border-black fresh:border-slate-200"
-                    : "text-[#878E99] hover:text-black hover:bg-[#E5E5E0]"
+                    : "text-black/45 fresh:text-[#878E99] hover:text-black hover:bg-[#E5E5E0]"
                 )}
                 title="点击编辑备注"
               >
@@ -192,26 +192,30 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
             )}
           </div>
 
-          <div className="text-[11px] text-[#878E99] font-mono uppercase tracking-widest space-y-1.5">
-            <div className="flex items-center justify-center gap-1.5">
+          <div className="w-full max-w-[250px] border-t border-black/50 fresh:border-slate-100 pt-3 text-xs text-black/60 fresh:text-slate-500 font-mono fresh:font-sans normal-case tracking-normal">
+            <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1.5 text-left">
               <span>创建时间</span>
-              <span className="text-[#B8BDC7]">/</span>
-              <span>{formatDateTime(resume.createdAt)}</span>
-            </div>
-            <div className="flex items-center justify-center gap-2 text-[#6B7280]">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-700" />
-              <span>更新时间 {formatDateTime(resume.updatedAt)}</span>
+              <span className="text-right tabular-nums text-black/60 fresh:text-slate-500">
+                {formatDateTime(resume.createdAt)}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-700 fresh:bg-emerald-600" />
+                更新时间
+              </span>
+              <span className="text-right tabular-nums text-black/60 fresh:text-slate-500">
+                {formatDateTime(resume.updatedAt)}
+              </span>
             </div>
           </div>
         </CardContent>
 
-        <CardFooter className="relative z-10 mt-auto pt-0 pb-6 px-4 gap-2 flex-nowrap">
+        <CardFooter className="relative z-10 mt-auto pt-0 pb-4 px-4 gap-2 flex-nowrap">
           {/* 置顶按钮 */}
           {onTogglePin && (
             <Button
               variant="ghost"
               className={cn(
-                "h-10 w-10 shrink-0 p-0 rounded-none fresh:rounded-lg border border-black fresh:border-slate-200 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm transition-[transform,box-shadow,background-color] duration-100 hover:translate-y-[1px] hover:translate-x-[1px] hover:shadow-none active:translate-y-[2px] active:translate-x-[2px]",
+                "h-10 w-10 shrink-0 p-0 rounded-none fresh:rounded-lg border border-black fresh:border-slate-200 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none transition-[transform,box-shadow,background-color] duration-100 hover:translate-y-[1px] hover:translate-x-[1px] fresh:hover:translate-x-0 fresh:hover:translate-y-0 hover:shadow-none active:translate-y-[2px] active:translate-x-[2px] fresh:active:translate-x-0 fresh:active:translate-y-0",
                 resume.pinned
                   ? "bg-[#4285F4] text-white border-[#4285F4] shadow-[2px_2px_0px_0px_rgba(66,133,244,0.5)] hover:bg-[#4285F4]"
                   : "bg-white text-black hover:bg-slate-50"
@@ -222,14 +226,12 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
               }}
               title={resume.pinned ? '取消置顶' : '置顶'}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-5 w-5">
-                <path d="M4.146.146A.5.5 0 0 1 4.5 0h7a.5.5 0 0 1 .5.5c0 .68-.342 1.174-.646 1.479-.126.125-.25.224-.354.298v4.431l.078.048c.203.127.476.314.751.555C12.36 7.775 13 8.527 13 9.5a.5.5 0 0 1-.5.5h-4v4.5c0 .276-.224 1.5-.5 1.5s-.5-1.224-.5-1.5V10h-4a.5.5 0 0 1-.5-.5c0-.973.64-1.725 1.17-2.189A6 6 0 0 1 5 6.708V2.277a3 3 0 0 1-.354-.298C4.342 1.674 4 1.179 4 .5a.5.5 0 0 1 .146-.354" />
-              </svg>
+              <Pin className="h-4 w-4" />
             </Button>
           )}
           <Button
             variant="outline"
-            className="flex-1 min-w-0 h-10 px-2"
+            className="flex-1 min-w-0 h-10 px-2 fresh:bg-white fresh:font-sans fresh:normal-case fresh:tracking-normal fresh:shadow-none fresh:hover:translate-x-0 fresh:hover:translate-y-0"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(resume.id);
@@ -239,8 +241,8 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
           </Button>
           {onDuplicate && (
             <Button
-              variant="secondary"
-              className="flex-1 min-w-0 h-10 px-2 inline-flex items-center justify-center gap-1"
+              variant="outline"
+              className="flex-1 min-w-0 h-10 px-2 inline-flex items-center justify-center gap-1 fresh:!border-slate-300 fresh:!bg-slate-100 fresh:!text-slate-800 fresh:font-sans fresh:font-medium fresh:normal-case fresh:tracking-normal fresh:shadow-none fresh:hover:!bg-slate-200 fresh:hover:translate-x-0 fresh:hover:translate-y-0"
               onClick={(e) => {
                 e.stopPropagation();
                 onDuplicate(resume.id);
@@ -254,7 +256,7 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
           )}
           <Button
             variant="ghost"
-            className="h-10 w-10 shrink-0 p-0 rounded-none fresh:rounded-lg border border-black fresh:border-slate-200 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm bg-[#F0F0E8] fresh:bg-slate-50 text-black hover:bg-[#B91C1C] hover:text-white transition-[transform,box-shadow,background-color] duration-100 hover:translate-y-[1px] hover:translate-x-[1px] hover:shadow-none active:translate-y-[2px] active:translate-x-[2px]"
+            className="h-10 w-10 shrink-0 p-0 rounded-none fresh:rounded-lg border border-black fresh:border-slate-200 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none bg-[#F0F0E8] fresh:bg-white text-black fresh:text-slate-600 hover:bg-[#B91C1C] hover:text-white fresh:hover:bg-red-50 fresh:hover:text-red-600 transition-[transform,box-shadow,background-color] duration-100 hover:translate-y-[1px] hover:translate-x-[1px] fresh:hover:translate-x-0 fresh:hover:translate-y-0 hover:shadow-none active:translate-y-[2px] active:translate-x-[2px] fresh:active:translate-x-0 fresh:active:translate-y-0"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(resume.id);

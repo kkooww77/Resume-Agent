@@ -12,9 +12,7 @@ import {
   ChevronDown,
   LogIn,
   LogOut,
-  LayoutTemplate,
-  History,
-  Sparkles,
+  Bot,
   Shield,
   Sun,
   Moon,
@@ -67,44 +65,6 @@ function SidebarToggleIcon({
       <rect x="2" y="4" width="20" height="16" rx="3" ry="3" />
       <line x1={lineX} y1="6" x2={lineX} y2="18" />
     </svg>
-  );
-}
-
-/** Agent 按钮图标：使用 Sparkles 图标并添加渐变背景和动画 */
-function AgentIcon({ active = false }: { active?: boolean }) {
-  return (
-    <div
-      className={cn(
-        "relative flex items-center justify-center rounded-md transition-all duration-300 shrink-0",
-        active
-          ? "bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-md shadow-indigo-500/20"
-          : "bg-slate-100 dark:bg-slate-800",
-        "w-6 h-6",
-      )}
-    >
-      <Sparkles
-        className={cn(
-          "w-4 h-4 transition-colors duration-300",
-          active
-            ? "text-white animate-pulse"
-            : "text-slate-500 dark:text-slate-400",
-        )}
-      />
-      {active && (
-        <motion.div
-          layoutId="activeGlow"
-          className="absolute inset-0 rounded-md bg-white/20 blur-[2px]"
-          animate={{
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      )}
-    </div>
   );
 }
 
@@ -186,6 +146,19 @@ export default function WorkspaceLayout({
   const canUseAdmin = isAuthenticated && canUseAdminFeature();
 
   const sidebarWidthPx = sidebarCollapsed ? 96 : 200;
+
+  const navItemClass = (active: boolean) =>
+    cn(
+      "relative h-11 w-full border text-sm font-medium transition-[color,background-color,border-color] duration-150",
+      "rounded-none fresh:rounded-lg font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] focus-visible:ring-inset",
+      sidebarCollapsed
+        ? "flex items-center justify-center px-0"
+        : "flex items-center gap-3 px-3",
+      active
+        ? "border-black fresh:border-transparent bg-[#4285F4] fresh:bg-blue-50 text-white fresh:text-slate-900 dark:border-white dark:bg-[#2A2A2A] dark:text-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none dark:shadow-[2px_2px_0px_0px_#ffffff]"
+        : "border-transparent text-slate-700 dark:text-slate-200 hover:bg-[#E5E5E0] fresh:hover:bg-slate-50 fresh:hover:text-slate-900 dark:hover:bg-[#2A2A2A]",
+    );
 
   // 点击外部区域关闭下拉菜单
   useEffect(() => {
@@ -313,45 +286,49 @@ export default function WorkspaceLayout({
       {/* 左侧固定边栏 */}
       <aside
         className={cn(
-          "shrink-0 bg-[#F0F0E8] fresh:bg-slate-50 dark:bg-[#1C1C1C] border-r-2 fresh:border-r border-black fresh:border-slate-200 dark:border-white flex flex-col transition-[width] duration-200",
+          "shrink-0 bg-[#F0F0E8] fresh:bg-white dark:bg-[#1C1C1C] border-r-2 fresh:border-r border-black fresh:border-slate-200 dark:border-white flex flex-col transition-[width] duration-200",
           sidebarCollapsed ? "w-24" : "w-[200px]",
         )}
       >
         {/* Logo + 收缩按钮：收起时合并，展开时并列 */}
-        <div className="border-b-2 fresh:border-b border-black fresh:border-slate-200 dark:border-white shrink-0 p-2">
+        <div className="border-b-2 fresh:border-b border-black fresh:border-slate-200 dark:border-white shrink-0 px-3 py-2.5">
           {!sidebarCollapsed ? (
-            <div className="flex items-center justify-between gap-1 w-full px-1">
-              <div
-                className="cursor-pointer group shrink-0 flex items-center gap-2.5 min-w-0"
+            <div className="flex h-9 items-center justify-between gap-2 w-full">
+              <button
+                type="button"
+                className="group shrink-0 flex items-center gap-2.5 min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4]"
                 onClick={() => navigate("/")}
+                aria-label="返回首页"
               >
-                <div className="w-9 h-9 bg-[#4285F4] rounded-none fresh:rounded-md flex items-center justify-center border border-black fresh:border-slate-200 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-[1px] group-hover:translate-y-[1px] group-hover:shadow-none transition-all shrink-0">
-                  <span className="text-white font-mono fresh:font-sans font-black text-sm not-italic">
+                <div className="w-8 h-8 bg-[#4285F4] rounded-none fresh:rounded-md flex items-center justify-center border border-black fresh:border-blue-500 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none dark:shadow-[2px_2px_0px_0px_#ffffff] transition-colors group-hover:bg-[#3367D6] shrink-0">
+                  <span className="text-white font-mono fresh:font-sans font-black text-xs not-italic">
                     RA
                   </span>
                 </div>
-                <span className="text-black dark:text-white font-mono fresh:font-sans font-bold text-base uppercase fresh:normal-case tracking-wide fresh:tracking-normal truncate">
+                <span className="text-black dark:text-white font-mono fresh:font-hero font-bold text-sm uppercase fresh:normal-case tracking-wide fresh:tracking-tight truncate">
                   Resume.AI
                 </span>
-              </div>
+              </button>
               <button
                 type="button"
                 onClick={toggleSidebar}
                 className={cn(
-                  "rounded-none fresh:rounded-md transition-colors shrink-0 p-1.5",
-                  "text-black dark:text-white hover:bg-[#E5E5E0] dark:hover:bg-[#2A2A2A]",
+                  "h-9 w-9 inline-flex items-center justify-center rounded-none fresh:rounded-md transition-colors shrink-0",
+                  "text-slate-600 dark:text-slate-300 hover:bg-[#E5E5E0] fresh:hover:bg-slate-100 dark:hover:bg-[#2A2A2A]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4]",
                 )}
                 title="收起侧边栏"
+                aria-label="收起侧边栏"
               >
-                <SidebarToggleIcon className="w-6 h-6" />
+                <SidebarToggleIcon className="w-5 h-5" />
               </button>
             </div>
           ) : (
-            <div className="relative group h-10 w-full flex items-center justify-center">
+            <div className="relative group h-9 w-full flex items-center justify-center">
               {/* 收起态默认状态：仅 Logo */}
               <div className="flex items-center justify-center transition-opacity duration-200 group-hover:opacity-0 w-full">
-                <div className="w-9 h-9 bg-[#4285F4] rounded-none fresh:rounded-md flex items-center justify-center border border-black fresh:border-slate-200 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff] shrink-0">
-                  <span className="text-white font-mono fresh:font-sans font-black text-sm not-italic">
+                <div className="w-8 h-8 bg-[#4285F4] rounded-none fresh:rounded-md flex items-center justify-center border border-black fresh:border-blue-500 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none dark:shadow-[2px_2px_0px_0px_#ffffff] shrink-0">
+                  <span className="text-white font-mono fresh:font-sans font-black text-xs not-italic">
                     RA
                   </span>
                 </div>
@@ -363,38 +340,41 @@ export default function WorkspaceLayout({
                 onClick={toggleSidebar}
                 className="absolute inset-0 flex items-center justify-center rounded-none fresh:rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 bg-[#E5E5E0] fresh:bg-slate-100/90 dark:bg-[#2A2A2A]/90 text-black dark:text-white"
                 title="展开侧边栏"
+                aria-label="展开侧边栏"
               >
-                <SidebarToggleIcon expand className="w-6 h-6" />
+                <SidebarToggleIcon expand className="w-5 h-5" />
               </button>
             </div>
           )}
         </div>
 
         {/* 工作区切换：收缩时仅隐藏文字，图标与 padding 不变 */}
-        <div className="flex-1 flex flex-col min-h-0 py-3 px-2">
+        <div className="flex-1 flex flex-col min-h-0 py-4 px-2.5">
+          {!sidebarCollapsed && (
+            <div className="mb-2 px-2 text-[11px] font-mono fresh:font-sans font-bold uppercase tracking-[0.14em] text-slate-500 fresh:tracking-wide">
+              工作区
+            </div>
+          )}
           <nav
             className={cn(
-              "space-y-0.5 flex flex-col shrink-0",
+              "space-y-1 flex flex-col shrink-0",
               sidebarCollapsed ? "items-center" : "",
             )}
+            aria-label="工作区导航"
           >
             {/* 编辑区 */}
             <button
               onClick={(e) => handleWorkspaceChange("edit", e)}
-              className={cn(
-                "w-full rounded-none fresh:rounded-md font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal transition-all duration-100 border",
-                sidebarCollapsed
-                  ? "flex flex-col items-center justify-center gap-1 py-2.5"
-                  : "flex items-center gap-2.5 py-2.5 px-2.5",
-                currentWorkspace === "edit"
-                  ? "bg-[#4285F4] text-white border-black fresh:border-slate-200 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]"
-                  : "border-transparent text-black dark:text-white hover:bg-[#E5E5E0] dark:hover:bg-[#2A2A2A]",
-              )}
+              className={navItemClass(currentWorkspace === "edit")}
               title="编辑区"
+              aria-current={currentWorkspace === "edit" ? "page" : undefined}
             >
-              <Edit className="w-6 h-6 shrink-0" />
+              {currentWorkspace === "edit" && (
+                <span className="absolute inset-y-2.5 left-0 hidden w-0.5 bg-[#4285F4] fresh:block fresh:rounded-r-full" />
+              )}
+              <Edit className={cn("w-5 h-5 shrink-0", currentWorkspace === "edit" && "text-white fresh:text-[#3367D6]")} />
               {!sidebarCollapsed && (
-                <span className="text-base font-medium">编辑简历</span>
+                <span>编辑简历</span>
               )}
             </button>
 
@@ -402,29 +382,16 @@ export default function WorkspaceLayout({
             {agentEnabled && (
               <button
                 onClick={(e) => handleWorkspaceChange("agent", e)}
-                className={cn(
-                  "w-full rounded-none fresh:rounded-md font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal transition-all duration-100 border group",
-                  sidebarCollapsed
-                    ? "flex flex-col items-center justify-center gap-1 py-2.5"
-                    : "flex items-center gap-2.5 py-2.5 px-2.5",
-                  currentWorkspace === "agent"
-                    ? "bg-[#4285F4] text-white border-black fresh:border-slate-200 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]"
-                    : "border-transparent text-black dark:text-white hover:bg-[#E5E5E0] dark:hover:bg-[#2A2A2A]",
-                )}
-                title="AI 对话"
+                className={navItemClass(currentWorkspace === "agent")}
+                title="AI 助手"
+                aria-current={currentWorkspace === "agent" ? "page" : undefined}
               >
-                <Sparkles className={cn("w-6 h-6 shrink-0", currentWorkspace === "agent" ? "text-white" : "text-black dark:text-white")} />
+                {currentWorkspace === "agent" && (
+                  <span className="absolute inset-y-2.5 left-0 hidden w-0.5 bg-[#4285F4] fresh:block fresh:rounded-r-full" />
+                )}
+                <Bot className={cn("w-5 h-5 shrink-0", currentWorkspace === "agent" && "text-white fresh:text-[#3367D6]")} />
                 {!sidebarCollapsed && (
-                  <span
-                    className={cn(
-                      "text-base font-medium transition-colors duration-100",
-                      currentWorkspace === "agent"
-                        ? "text-white"
-                        : "text-black dark:text-white",
-                    )}
-                  >
-                    AI 助手
-                  </span>
+                  <span>AI 助手</span>
                 )}
               </button>
             )}
@@ -432,51 +399,41 @@ export default function WorkspaceLayout({
             {/* 我的简历 */}
             <button
               onClick={(e) => handleWorkspaceChange("myResumes", e)}
-              className={cn(
-                "w-full rounded-none fresh:rounded-md font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal transition-all duration-100 border",
-                sidebarCollapsed
-                  ? "flex flex-col items-center justify-center gap-1 py-2.5"
-                  : "flex items-center gap-2.5 py-2.5 px-2.5",
-                currentWorkspace === "myResumes"
-                  ? "bg-[#4285F4] text-white border-black fresh:border-slate-200 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]"
-                  : "border-transparent text-black dark:text-white hover:bg-[#E5E5E0] dark:hover:bg-[#2A2A2A]",
-              )}
+              className={navItemClass(currentWorkspace === "myResumes")}
               title="我的简历"
+              aria-current={currentWorkspace === "myResumes" ? "page" : undefined}
             >
-              <FileText className="w-6 h-6 shrink-0" />
+              {currentWorkspace === "myResumes" && (
+                <span className="absolute inset-y-2.5 left-0 hidden w-0.5 bg-[#4285F4] fresh:block fresh:rounded-r-full" />
+              )}
+              <FileText className={cn("w-5 h-5 shrink-0", currentWorkspace === "myResumes" && "text-white fresh:text-[#3367D6]")} />
               {!sidebarCollapsed && (
-                <span className="text-base font-medium">我的简历</span>
+                <span>我的简历</span>
               )}
             </button>
 
             {canUseAdmin && (
               <button
                 onClick={(e) => handleWorkspaceChange("admin", e)}
-                className={cn(
-                  "w-full rounded-none fresh:rounded-md font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal transition-all duration-100 border",
-                  sidebarCollapsed
-                    ? "flex flex-col items-center justify-center gap-1 py-2.5"
-                    : "flex items-center gap-2.5 py-2.5 px-2.5",
-                  currentWorkspace === "admin"
-                    ? "bg-[#4285F4] text-white border-black fresh:border-slate-200 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]"
-                    : "border-transparent text-black dark:text-white hover:bg-[#E5E5E0] dark:hover:bg-[#2A2A2A]",
-                )}
+                className={navItemClass(currentWorkspace === "admin")}
                 title="后台管理系统"
+                aria-current={currentWorkspace === "admin" ? "page" : undefined}
               >
-                <Shield className="w-6 h-6 shrink-0" />
+                {currentWorkspace === "admin" && (
+                  <span className="absolute inset-y-2.5 left-0 hidden w-0.5 bg-[#4285F4] fresh:block fresh:rounded-r-full" />
+                )}
+                <Shield className={cn("w-5 h-5 shrink-0", currentWorkspace === "admin" && "text-white fresh:text-[#3367D6]")} />
                 {!sidebarCollapsed && (
-                  <span className="text-base font-medium">后台管理系统</span>
+                  <span>后台管理系统</span>
                 )}
               </button>
             )}
           </nav>
 
           {/* 分隔线 */}
-          <div className="border-t-2 border-black fresh:border-slate-200 dark:border-white my-2 shrink-0" />
-
           {/* 历史会话 - 常驻显示 */}
           {!sidebarCollapsed && canUseAgent && (
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden border-t border-black fresh:border-slate-200 dark:border-white mt-3 pt-3">
               <RecentSessions
                 currentSessionId={sidebarCurrentSessionId}
                 onSelectSession={handleSelectSession}
@@ -490,7 +447,7 @@ export default function WorkspaceLayout({
         </div>
 
         {/* 底部：主题切换 + 登录组件（与导航风格统一） */}
-        <div className="py-4 px-3 border-t-2 border-black fresh:border-slate-200 dark:border-white">
+        <div className="py-3 px-2.5 border-t-2 fresh:border-t border-black fresh:border-slate-200 dark:border-white">
           {/* 深色 / 浅色切换：仅管理员可见（登录态下移入用户下拉，未登录时保留此处） */}
           {!isAuthenticated && canUseAdminFeature() && (
             <button
@@ -564,7 +521,7 @@ export default function WorkspaceLayout({
                       )}
                     >
                       <div className="px-3 py-2 border-b border-black fresh:border-slate-200 dark:border-white mb-1">
-                        <p className="text-[10px] font-mono fresh:font-sans font-bold text-black dark:text-white uppercase fresh:normal-case tracking-wide fresh:tracking-normalst">账号管理</p>
+                        <p className="text-[10px] font-mono fresh:font-sans font-bold text-black dark:text-white uppercase fresh:normal-case tracking-wide fresh:tracking-normal">账号管理</p>
                       </div>
                       <button
                         type="button"
@@ -647,25 +604,25 @@ export default function WorkspaceLayout({
                         type="button"
                         onClick={() => openModal("login")}
                         className={cn(
-                          "w-full rounded-none fresh:rounded-md transition-all duration-100 font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal group",
-                          "bg-[#4285F4] text-white border border-black fresh:border-slate-200 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]",
-                          "hover:bg-[#3367D6] hover:translate-x-[1px] fresh:hover:translate-x-0 hover:translate-y-[1px] fresh:hover:translate-y-0 hover:shadow-none fresh:hover:shadow-sm active:translate-x-[2px] active:translate-y-[2px]",
+                          "h-11 w-full rounded-none fresh:rounded-md transition-colors duration-150 font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal group",
+                          "bg-white fresh:bg-transparent dark:bg-[#2A2A2A] text-slate-700 dark:text-slate-200 border border-black fresh:border-slate-200 dark:border-white shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none dark:shadow-[2px_2px_0px_0px_#ffffff]",
+                          "hover:bg-[#E5E5E0] fresh:hover:bg-slate-100 dark:hover:bg-[#333333] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] focus-visible:ring-inset",
                           sidebarCollapsed
-                            ? "flex flex-col items-center justify-center gap-1 py-3"
-                            : "flex items-center gap-3 py-2.5 px-4",
+                            ? "flex items-center justify-center"
+                            : "flex items-center gap-3 px-3",
                         )}
                         title="登录 / 注册"
                       >
-                        <LogIn className="w-4 h-4 shrink-0 text-white transition-colors" />
+                        <LogIn className="w-4 h-4 shrink-0 text-[#3367D6]" />
                         {!sidebarCollapsed && (
-                          <span className="text-sm">立即登录</span>
+                          <span className="text-sm font-medium">登录 / 注册</span>
                         )}
                       </button>
             )}
           </div>
           {!sidebarCollapsed && (
-            <div className="flex items-center justify-center gap-2 mt-3 px-2">
-              <span className="text-[10px] font-mono fresh:font-sans font-bold text-black/60 dark:text-white/60 uppercase fresh:normal-case tracking-wide fresh:tracking-normalst">VERSION {LATEST_CHANGELOG.version}</span>
+            <div className="flex items-center justify-center gap-2 mt-2.5 px-2">
+              <span className="text-[10px] font-mono fresh:font-sans font-medium text-black/45 dark:text-white/50 uppercase fresh:normal-case tracking-wide fresh:tracking-normal">VERSION {LATEST_CHANGELOG.version}</span>
             </div>
           )}
         </div>

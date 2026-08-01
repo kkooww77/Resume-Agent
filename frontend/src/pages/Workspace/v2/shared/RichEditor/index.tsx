@@ -42,6 +42,7 @@ import GrammarCheckDialog from '../GrammarCheckDialog'
 import AIWriteDialog from '../AIWriteDialog'
 import type { ResumeData, Education } from '../../types'
 import { setActiveSelection } from '../activeSelectionStore'
+import { EDITOR_COMPOSITE_CONTROL_CLASS } from '../../EditPanel/editorStyles'
 import './tiptap.css'
 
 
@@ -137,7 +138,7 @@ const MenuButton = ({
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         className={cn(
-          'h-9 w-9 rounded-md transition-all duration-200 hover:scale-105 p-0 flex items-center justify-center',
+          'h-9 w-9 rounded-none fresh:rounded-md border border-transparent p-0 flex items-center justify-center transition-colors duration-200',
           isActive
             ? 'bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700'
             : 'hover:bg-gray-100 dark:hover:bg-neutral-800',
@@ -285,17 +286,16 @@ const RichEditor = ({
   return (
     <div
       className={cn(
-        'relative rounded-lg overflow-hidden border shadow-sm',
-        'bg-white border-gray-100',
-        'dark:bg-neutral-900/30 dark:border-neutral-800'
+        EDITOR_COMPOSITE_CONTROL_CLASS,
+        'relative'
       )}
       onClick={(e) => e.stopPropagation()}
     >
       {/* 工具栏 */}
       <div
         className={cn(
-          'border-b px-2 py-1.5 flex flex-wrap items-center gap-3',
-          'bg-gray-50 dark:bg-neutral-900/50 dark:border-neutral-800'
+          'border-b border-black fresh:border-slate-200 px-2 py-1.5 flex flex-wrap items-center gap-2',
+          'bg-[#ECEDE9] fresh:bg-slate-50 dark:bg-neutral-900/50 dark:border-white'
         )}
       >
         {/* 文字样式 */}
@@ -500,7 +500,7 @@ const RichEditor = ({
           {educationData && (
             <button
               onClick={() => setShowAIWriteDialog(true)}
-              className="ml-2 px-3 py-1.5 text-sm rounded-md bg-gradient-to-r from-violet-400 to-purple-500 hover:from-purple-500 hover:to-violet-400 text-white shadow-md transition-all duration-300 flex items-center gap-1"
+              className="ml-2 flex items-center gap-1 rounded-none fresh:rounded-md border border-black fresh:border-violet-300 bg-violet-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-violet-700 dark:border-white"
             >
               <Wand2 className="h-4 w-4" />
               AI 帮写
@@ -511,7 +511,7 @@ const RichEditor = ({
           {(resumeData || onPolish) && (
             <button
               onClick={handlePolish}
-              className="ml-2 px-3 py-1.5 text-sm rounded-md bg-white text-black border border-slate-300 hover:bg-slate-50 shadow-sm transition-all duration-200 flex items-center gap-1"
+              className="ml-2 flex items-center gap-1 rounded-none fresh:rounded-md border border-black fresh:border-slate-300 bg-white px-3 py-1.5 text-sm text-black transition-colors hover:bg-slate-100 dark:border-white dark:bg-neutral-800 dark:text-neutral-100"
             >
               <Wand2 className="h-4 w-4" />
               AI 润色
@@ -522,7 +522,7 @@ const RichEditor = ({
           {resumeData && (
             <button
               onClick={() => (isContentEmpty() ? toast('先填写一些内容，再做语法体检～') : setShowGrammarDialog(true))}
-              className="ml-2 px-3 py-1.5 text-sm rounded-md bg-white text-black border border-slate-300 hover:bg-slate-50 shadow-sm transition-all duration-200 flex items-center gap-1 dark:bg-neutral-800 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-700"
+              className="ml-2 flex items-center gap-1 rounded-none fresh:rounded-md border border-black fresh:border-slate-300 bg-white px-3 py-1.5 text-sm text-black transition-colors hover:bg-slate-100 dark:border-white dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
             >
               <SpellCheck className="h-4 w-4" />
               语法体检

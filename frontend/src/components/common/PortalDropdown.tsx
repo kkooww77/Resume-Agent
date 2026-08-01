@@ -27,6 +27,7 @@ type PortalDropdownProps = {
   renderBadgeOption?: boolean
   triggerClassName?: string
   triggerLabelClassName?: string
+  triggerId?: string
   portalId?: string
 }
 
@@ -48,6 +49,7 @@ export default function PortalDropdown({
   renderBadgeOption,
   triggerClassName,
   triggerLabelClassName,
+  triggerId,
   portalId = 'portal-dropdown-root',
 }: PortalDropdownProps) {
   const [open, setOpen] = useState(Boolean(autoOpen) && !disabled)
@@ -94,9 +96,12 @@ export default function PortalDropdown({
   return (
     <div ref={rootRef} className={cn('relative w-full', open && 'z-[300]')}>
       <button
+        id={triggerId}
         ref={triggerRef}
         type="button"
         disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
         onClick={() => {
           if (disabled) return
           setOpen((prev) => {
@@ -132,7 +137,7 @@ export default function PortalDropdown({
               </span>
             )
           ) : (
-            <span className="truncate text-sm text-slate-400 font-medium">{placeholder}</span>
+            <span className={cn('truncate text-sm text-slate-400 font-medium', triggerLabelClassName)}>{placeholder}</span>
           )}
         </span>
         <ChevronDown
@@ -149,6 +154,7 @@ export default function PortalDropdown({
         createPortal(
           <div id={portalId} className="fixed inset-0 z-[1200]" style={{ pointerEvents: 'none' }}>
             <div
+              role="listbox"
               className={cn(
                 'absolute rounded-none border-2 border-black dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[3px_3px_0px_0px_#000000] dark:shadow-[3px_3px_0px_0px_#ffffff] overflow-hidden',
                 dropdownClassName
@@ -161,6 +167,8 @@ export default function PortalDropdown({
                   return (
                     <button
                       type="button"
+                      role="option"
+                      aria-selected={active}
                       key={opt.value}
                       className={cn(
                         'w-full text-left px-3 py-2 transition-colors text-sm flex items-start gap-2',

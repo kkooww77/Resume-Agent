@@ -5,10 +5,10 @@
  */
 import React, { useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Bold } from 'lucide-react'
 import { cn } from '../../../../lib/utils'
 import RichEditor from '../shared/RichEditor'
 import BoldInput from './BoldInput'
+import { EDITOR_CONTROL_CLASS, EDITOR_LABEL_CLASS } from './editorStyles'
 
 import type { ResumeData, Education } from '../types'
 
@@ -59,7 +59,7 @@ const Field = ({
     return (
       <motion.div {...fieldAnimation} className="space-y-2">
         {label && (
-          <label className="font-mono fresh:font-sans text-xs fresh:text-sm font-bold fresh:font-normal text-[#444850] fresh:text-gray-600 dark:text-neutral-300">
+          <label className={EDITOR_LABEL_CLASS}>
             {label}
           </label>
         )}
@@ -80,7 +80,7 @@ const Field = ({
     return (
       <motion.div {...fieldAnimation} className="space-y-2">
         {label && (
-          <label className="font-mono fresh:font-sans text-xs fresh:text-sm font-bold fresh:font-normal text-[#444850] fresh:text-gray-600 dark:text-neutral-300">
+          <label className={EDITOR_LABEL_CLASS}>
             {label}
           </label>
         )}
@@ -90,10 +90,8 @@ const Field = ({
           placeholder={placeholder}
           rows={4}
           className={cn(
-            'w-full px-3 py-2 rounded-none fresh:rounded-md border-2 fresh:border resize-none',
-            'bg-white border-black fresh:border-gray-200 text-gray-700',
-            'dark:bg-[#1C1C1C] dark:border-white dark:text-neutral-200',
-            'focus:outline-none focus:ring-2 focus:ring-blue-700 fresh:focus:ring-primary/20 focus:border-black fresh:focus:border-primary',
+            EDITOR_CONTROL_CLASS,
+            'resize-none',
             className
           )}
         />
@@ -106,7 +104,7 @@ const Field = ({
     return (
       <motion.div {...fieldAnimation} className="space-y-2">
         {label && (
-          <label className="font-mono fresh:font-sans text-xs fresh:text-sm font-bold fresh:font-normal text-[#444850] fresh:text-gray-600 dark:text-neutral-300">
+          <label className={EDITOR_LABEL_CLASS}>
             {label}
           </label>
         )}
@@ -115,10 +113,7 @@ const Field = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            'w-full px-3 py-2 rounded-none fresh:rounded-md border-2 fresh:border',
-            'bg-white border-black fresh:border-gray-200 text-gray-700',
-            'dark:bg-[#1C1C1C] dark:border-white dark:text-neutral-200',
-            'focus:outline-none focus:ring-2 focus:ring-blue-700 fresh:focus:ring-primary/20 focus:border-black fresh:focus:border-primary',
+            EDITOR_CONTROL_CLASS,
             className
           )}
         />
@@ -149,7 +144,7 @@ const Field = ({
       {labelExtra ? (
         <div className="flex items-center justify-between gap-2">
           {label && (
-            <label className="font-mono fresh:font-sans text-xs fresh:text-sm font-bold fresh:font-normal text-[#444850] fresh:text-gray-600 dark:text-neutral-300">
+            <label className={EDITOR_LABEL_CLASS}>
               {label}
             </label>
           )}
@@ -157,7 +152,7 @@ const Field = ({
         </div>
       ) : (
         label && (
-          <label className="font-mono fresh:font-sans text-xs fresh:text-sm font-bold fresh:font-normal text-[#444850] fresh:text-gray-600 dark:text-neutral-300">
+          <label className={EDITOR_LABEL_CLASS}>
             {label}
           </label>
         )
@@ -169,10 +164,7 @@ const Field = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={cn(
-          'w-full px-3 py-2 rounded-none fresh:rounded-md border-2 fresh:border',
-          'bg-white border-gray-200 text-gray-700',
-          'dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-200',
-          'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
+          EDITOR_CONTROL_CLASS,
           className
         )}
       />

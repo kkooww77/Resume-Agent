@@ -8,6 +8,7 @@ import { ChevronDown, Eye, GripVertical, Trash2 } from 'lucide-react'
 import { cn } from '../../../../lib/utils'
 import type { Project, ResumeData, GlobalSettings } from '../types'
 import Field from './Field'
+import { EDITOR_ITEM_BODY_CLASS, EDITOR_ITEM_CLASS, EDITOR_ITEM_HEADER_CLASS, EDITOR_LABEL_CLASS } from './editorStyles'
 import { MonthYearRangePicker } from '../shared/MonthYearRangePicker'
 
 interface ProjectItemProps {
@@ -85,7 +86,7 @@ const ProjectEditor = ({
             transition={{ duration: 0.2, delay: 2 * 0.05, ease: 'easeOut' }}
           >
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-gray-500 dark:text-neutral-400">项目链接</label>
+              <label className={EDITOR_LABEL_CLASS}>项目链接</label>
               {updateGlobalSettings && (
                 <div className="flex items-center gap-1 bg-[#F1F2F5] dark:bg-[#2A2A2A] rounded-none fresh:rounded-md p-0.5">
                   {([
@@ -233,21 +234,15 @@ const ProjectItem = ({
       value={project}
       dragListener={false}
       dragControls={dragControls}
-      className={cn(
-        'rounded-none fresh:rounded-md border-2 fresh:border overflow-hidden transition-opacity',
-        'bg-white hover:border-primary',
-        'dark:bg-neutral-900/30 dark:border-white dark:hover:border-primary',
-        'border-black fresh:border-slate-200',
-        !project.visible && 'opacity-40'
-      )}
+      className={cn(EDITOR_ITEM_CLASS, 'hover:border-primary', !project.visible && 'opacity-40')}
       whileDrag={{ scale: 1.02 }}
     >
       <div className="min-w-0">
         {/* 标题行 */}
         <div
           className={cn(
-            'px-4 py-4 flex items-center justify-between cursor-pointer select-none',
-            expanded && 'bg-[#F1F2F5] dark:bg-neutral-800/50'
+            EDITOR_ITEM_HEADER_CLASS,
+            expanded && 'bg-[#ECEDE9] fresh:bg-slate-50 dark:bg-neutral-800/50'
           )}
           onClick={() => setExpanded(!expanded)}
         >
@@ -325,14 +320,7 @@ const ProjectItem = ({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div
-                className={cn(
-                  'px-4 pb-4 space-y-4',
-                  'border-black fresh:border-slate-200 dark:border-white'
-                )}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className={cn('h-px w-full', 'bg-[#F1F2F5] dark:bg-[#2A2A2A]')} />
+              <div className={EDITOR_ITEM_BODY_CLASS} onClick={(e) => e.stopPropagation()}>
                 <ProjectEditor
                   project={project}
                   onSave={onUpdate}

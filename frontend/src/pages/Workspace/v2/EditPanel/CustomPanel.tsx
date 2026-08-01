@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../../../lib/utils'
 import type { CustomItem } from '../types'
 import Field from './Field'
+import { EDITOR_ADD_BUTTON_CLASS, EDITOR_ITEM_BODY_CLASS, EDITOR_ITEM_CLASS, EDITOR_PANEL_CLASS } from './editorStyles'
 import { MonthYearRangePicker } from '../shared/MonthYearRangePicker'
 
 interface CustomPanelProps {
@@ -36,16 +37,10 @@ function CustomItemCard({
 
   return (
     <div
-      className={cn(
-        'rounded-none fresh:rounded-md border overflow-hidden transition-opacity',
-        'bg-white hover:border-primary',
-        'dark:bg-neutral-900/30 dark:border-white dark:hover:border-primary',
-        'border-black fresh:border-slate-200',
-        item.visible === false && 'opacity-40'
-      )}
+      className={cn(EDITOR_ITEM_CLASS, 'hover:border-primary', item.visible === false && 'opacity-40')}
     >
       <div className="min-w-0">
-        <div className="px-4 py-4 flex items-center justify-between">
+        <div className="flex min-h-16 items-center justify-between gap-3 px-4 py-3">
           <div className="flex-1 min-w-0">
             <h3 className="font-medium truncate text-gray-700 dark:text-neutral-200">
               {item.title || '未命名条目'}
@@ -84,8 +79,7 @@ function CustomItemCard({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 space-y-4">
-                <div className="h-px w-full bg-gray-100 dark:bg-neutral-800" />
+              <div className={EDITOR_ITEM_BODY_CLASS}>
                 <div className="grid grid-cols-2 gap-4">
                   <Field
                     index={0}
@@ -135,7 +129,7 @@ export default function CustomPanel({
   onDelete,
 }: CustomPanelProps) {
   return (
-    <div className={cn('space-y-4 px-4 py-4 rounded-none fresh:rounded-md', 'bg-white dark:bg-neutral-900/30')}>
+    <div className={EDITOR_PANEL_CLASS}>
       <div className="space-y-3">
         {items.map((item) => (
           <CustomItemCard
@@ -150,14 +144,7 @@ export default function CustomPanel({
 
       <button
         onClick={() => onCreate(sectionId)}
-        className={cn(
-          'w-full px-4 py-3 rounded-none fresh:rounded-md border-2 fresh:border border-dashed',
-          'border-black fresh:border-slate-200 dark:border-white',
-          'hover:border-primary hover:bg-primary/5',
-          'transition-colors duration-200',
-          'flex items-center justify-center gap-2',
-          'text-gray-500 dark:text-neutral-400'
-        )}
+        className={EDITOR_ADD_BUTTON_CLASS}
       >
         <PlusCircle className="w-4 h-4" />
         添加条目

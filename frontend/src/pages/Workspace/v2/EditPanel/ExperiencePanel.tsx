@@ -3,9 +3,9 @@
  */
 import { PlusCircle, Wand2, GripVertical } from 'lucide-react'
 import { Reorder } from 'framer-motion'
-import { cn } from '../../../../lib/utils'
 import type { Experience, GlobalSettings, ResumeData } from '../types'
 import ExperienceItem from './ExperienceItem'
+import { EDITOR_ADD_BUTTON_CLASS, EDITOR_PANEL_CLASS } from './editorStyles'
 
 import { AIImportButton } from '@/components/common/AIImportButton';
 
@@ -47,7 +47,7 @@ const ExperiencePanel = ({
   }
 
   return (
-    <div className={cn('space-y-4 px-4 py-4 rounded-none fresh:rounded-md', 'bg-white dark:bg-neutral-900/30')}>
+    <div className={EDITOR_PANEL_CLASS}>
       {onAIImport && (
         <AIImportButton 
           onClick={onAIImport}
@@ -76,14 +76,7 @@ const ExperiencePanel = ({
 
       <button
         onClick={handleCreate}
-        className={cn(
-          'w-full px-4 py-3 rounded-none fresh:rounded-md border-2 fresh:border border-dashed',
-          'border-black fresh:border-slate-200 dark:border-white',
-          'hover:border-primary hover:bg-primary/5',
-          'transition-colors duration-200',
-          'flex items-center justify-center gap-2',
-          'text-gray-500 dark:text-neutral-400'
-        )}
+        className={EDITOR_ADD_BUTTON_CLASS}
       >
         <PlusCircle className="w-4 h-4" />
         添加实习经历

@@ -250,7 +250,7 @@ export default function EditPreviewLayout(props: EditPreviewLayoutProps) {
               <div
                 className={cn(
                   "h-full overflow-y-auto shrink-0",
-                  "bg-white/80 fresh:bg-white dark:bg-slate-900/80",
+                  "bg-[#F6F3EC] fresh:bg-white dark:bg-slate-900/80",
                   "backdrop-blur-sm fresh:backdrop-blur-none border-r border-slate-200 dark:border-slate-800",
                 )}
                 style={{ width: sidePanelWidth }}

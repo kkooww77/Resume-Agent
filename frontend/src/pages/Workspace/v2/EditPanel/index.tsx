@@ -258,7 +258,7 @@ export function EditPanel({
     <div
       className={cn(
         'h-full border-r overflow-y-auto',
-        'bg-[#F1F2F5] border-black fresh:border-slate-200',
+        'bg-[#F6F3EC] border-black fresh:bg-[#F1F2F5] fresh:border-slate-200',
         'dark:bg-[#1C1C1C] dark:border-white'
       )}
     >

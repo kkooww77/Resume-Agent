@@ -156,7 +156,7 @@ export default function PortalDropdown({
             <div
               role="listbox"
               className={cn(
-                'absolute rounded-none border-2 border-black dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[3px_3px_0px_0px_#000000] dark:shadow-[3px_3px_0px_0px_#ffffff] overflow-hidden',
+                'absolute overflow-hidden rounded-none fresh:rounded-lg border-2 fresh:border border-black fresh:border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[3px_3px_0px_0px_#000000] fresh:shadow-lg dark:shadow-[3px_3px_0px_0px_#ffffff]',
                 dropdownClassName
               )}
               style={{ top: popupPos.top, left: popupPos.left, width: popupPos.width, maxWidth: 320, pointerEvents: 'auto' }}
@@ -173,8 +173,8 @@ export default function PortalDropdown({
                       className={cn(
                         'w-full text-left px-3 py-2 transition-colors text-sm flex items-start gap-2',
                         active
-                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white'
-                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200'
+                          ? 'bg-slate-100 fresh:bg-blue-50 dark:bg-slate-800 text-slate-900 fresh:text-blue-700 dark:text-white'
+                          : 'hover:bg-slate-50 fresh:hover:bg-blue-50/60 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200'
                       )}
                       onClick={() => {
                         onSelect(opt.value)

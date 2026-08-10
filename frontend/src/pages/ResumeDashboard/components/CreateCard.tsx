@@ -19,7 +19,7 @@ export const CreateCard: React.FC<CreateCardProps> = ({ onClick }) => {
     >
       <Card
         className={cn(
-          "relative overflow-hidden cursor-pointer h-[340px] flex flex-col rounded-none fresh:rounded-md border-2 fresh:border border-dashed border-black fresh:border-slate-300 transition-[box-shadow,transform,background-color] duration-150",
+          "resume-dashboard-card relative flex cursor-pointer flex-col overflow-hidden rounded-none border-2 border-dashed border-black transition-[box-shadow,transform,background-color] duration-150 fresh:rounded-md fresh:border fresh:border-slate-300",
           "bg-[#F2F1EA] fresh:bg-white",
           "hover:bg-[#E5E5E0] fresh:hover:bg-slate-50 group-hover:shadow-none fresh:group-hover:shadow-md"
         )}

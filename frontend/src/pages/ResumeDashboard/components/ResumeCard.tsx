@@ -5,7 +5,7 @@ import { Card, CardContent, CardTitle, CardDescription, CardFooter } from './ui/
 import { Button } from './ui/button'
 import { FileText, Trash2 } from './Icons'
 import { cn } from '@/lib/utils'
-import type { SavedResume } from '@/services/resumeStorage'
+import type { SavedResumeSummary } from '@/services/resumeStorage'
 
 // 格式化时间为 年/月/日 时:分
 const formatDateTime = (timestamp: number): string => {
@@ -19,7 +19,7 @@ const formatDateTime = (timestamp: number): string => {
 }
 
 interface ResumeCardProps {
-  resume: SavedResume
+  resume: SavedResumeSummary
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   onDuplicate?: (id: string) => void
@@ -81,14 +81,7 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 4 }}
-      whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className="relative group"
-    >
+    <div className="relative group">
       {typeof index === 'number' && index > 0 && (
         <div
           className={cn(
@@ -136,27 +129,27 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
 
       <Card
         className={cn(
-          "relative overflow-visible h-[340px] flex flex-col transition-[border-color,box-shadow,transform] duration-150",
+          "resume-dashboard-card relative flex flex-col overflow-visible transition-[border-color,box-shadow,transform] duration-150",
           "bg-[#F2F1EA] fresh:bg-white",
           "group-hover:shadow-none fresh:group-hover:border-blue-200 fresh:group-hover:shadow-md",
           resume.pinned && "fresh:border-blue-200 fresh:shadow-[0_4px_14px_rgba(66,133,244,0.14)]",
           isMultiSelectMode && isSelected && "shadow-[4px_4px_0px_0px_#0ea5e9] border-sky-500"
         )}
       >
-        <CardContent className="relative flex-1 min-h-0 pt-9 text-center flex flex-col items-center z-10">
+        <CardContent className="resume-dashboard-card-content relative z-10 flex min-h-0 flex-1 flex-col items-center pt-9 text-center">
           <motion.div
-            className="mb-4 p-3 rounded-none fresh:rounded-md bg-[#E7E6DE] fresh:bg-slate-50 text-black shadow-[2px_2px_0px_0px_#000000] fresh:shadow-none border-2 fresh:border border-black fresh:border-slate-200"
+            className="resume-dashboard-card-icon mb-4 rounded-none border-2 border-black bg-[#E7E6DE] p-3 text-black shadow-[2px_2px_0px_0px_#000000] fresh:rounded-md fresh:border fresh:border-slate-200 fresh:bg-slate-50 fresh:shadow-none"
           >
             <FileText className="h-7 w-7" />
           </motion.div>
 
-          <CardTitle className="min-h-7 max-w-full text-xl leading-7 font-sans font-semibold tracking-tight line-clamp-1 text-black fresh:text-slate-800 px-6 mb-2">
+          <CardTitle className="resume-dashboard-card-title mb-2 min-h-7 max-w-full px-6 font-sans text-xl font-semibold leading-7 tracking-tight text-black line-clamp-1 fresh:text-slate-800">
             {resume.name || "未命名简历"}
           </CardTitle>
           
           {/* 备注/别名区域 */}
           <div 
-            className="px-6 mb-3 min-h-[28px] flex items-center justify-center"
+            className="resume-dashboard-card-alias mb-3 flex min-h-[28px] items-center justify-center px-6"
             onClick={(e) => e.stopPropagation()}
           >
             {isEditingAlias ? (
@@ -192,7 +185,7 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
             )}
           </div>
 
-          <div className="w-full max-w-[250px] border-t border-black/50 fresh:border-slate-100 pt-3 text-xs text-black/60 fresh:text-slate-500 font-mono fresh:font-sans normal-case tracking-normal">
+          <div className="resume-dashboard-card-meta w-full max-w-[250px] border-t border-black/50 pt-3 font-mono text-xs normal-case tracking-normal text-black/60 fresh:border-slate-100 fresh:font-sans fresh:text-slate-500">
             <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1.5 text-left">
               <span>创建时间</span>
               <span className="text-right tabular-nums text-black/60 fresh:text-slate-500">
@@ -209,7 +202,7 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
           </div>
         </CardContent>
 
-        <CardFooter className="relative z-10 mt-auto pt-0 pb-4 px-4 gap-2 flex-nowrap">
+        <CardFooter className="resume-dashboard-card-footer relative z-10 mt-auto flex-nowrap gap-2 px-4 pb-4 pt-0">
           {/* 置顶按钮 */}
           {onTogglePin && (
             <Button
@@ -266,6 +259,6 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
           </Button>
         </CardFooter>
       </Card>
-    </motion.div>
+    </div>
   )
 }

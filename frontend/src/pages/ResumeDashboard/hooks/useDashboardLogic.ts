@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from '@/lib/toast'
 import { confirmDialog } from '@/lib/confirm'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import {
-  getAllResumes,
+  getResumeSummaryPage,
   deleteResume as deleteResumeService,
   duplicateResume as duplicateResumeService,
   saveResume,
@@ -12,7 +12,8 @@ import {
   getResume,
   updateResumeAlias as updateResumeAliasService,
   updateResumePinned as updateResumePinnedService,
-  type SavedResume
+  type SavedResume,
+  type SavedResumeSummary,
 } from '@/services/resumeStorage'
 import { fetchPdfDownloadQuota, recordPdfDownload, renderPDF } from '@/services/api'
 import { convertToBackendFormat } from '@/pages/Workspace/v2/utils/convertToBackend'
@@ -27,9 +28,17 @@ const generateUUID = () => {
   });
 }
 
-export const useDashboardLogic = () => {
-  const [resumes, setResumes] = useState<SavedResume[]>([])
+type DashboardPageRequest = Readonly<{
+  offset: number
+  limit: number
+}>
+
+export const useDashboardLogic = ({ offset, limit }: DashboardPageRequest) => {
+  const [resumes, setResumes] = useState<SavedResumeSummary[]>([])
+  const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [hasLoaded, setHasLoaded] = useState(false)
+  const requestIdRef = useRef(0)
   const navigate = useNavigate()
 
   /** 是否处于多选模式 */
@@ -38,22 +47,29 @@ export const useDashboardLogic = () => {
   /** 选中的简历 ID 集合（用于批量删除） */
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  const loadResumes = async () => {
+  const loadResumes = useCallback(async () => {
+    const requestId = ++requestIdRef.current
     setIsLoading(true)
-    const list = await getAllResumes()
-    // 置顶优先，然后按创建时间倒序排列
-    list.sort((a, b) => {
-      // 置顶的排在前面
-      if (a.pinned && !b.pinned) return -1
-      if (!a.pinned && b.pinned) return 1
-      // 同级别按创建时间倒序
-      return b.createdAt - a.createdAt
-    })
-    setResumes(list)
-    setIsLoading(false)
-  }
+    try {
+      const page = await getResumeSummaryPage(offset, limit)
+      if (requestId !== requestIdRef.current) return
+      setResumes(page.items)
+      setTotalCount(page.total)
+      setHasLoaded(true)
+    } catch (error) {
+      if (requestId !== requestIdRef.current) return
+      console.error('[ResumeDashboard] 加载分页摘要失败:', error)
+      setResumes([])
+      setTotalCount(0)
+      setHasLoaded(true)
+    } finally {
+      if (requestId === requestIdRef.current) setIsLoading(false)
+    }
+  }, [offset, limit])
 
   useEffect(() => {
+    setResumes([])
+    setIsLoading(true)
     ;(async () => {
       await loadResumes()
     })()
@@ -77,7 +93,11 @@ export const useDashboardLogic = () => {
       window.removeEventListener('storage', handleStorage)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [])
+  }, [loadResumes])
+
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [offset, limit])
 
   const createResume = () => {
     // 跳转到创建选择页面
@@ -196,7 +216,7 @@ export const useDashboardLogic = () => {
 
     // 刷新列表
     await loadResumes()
-  }, [selectedIds])
+  }, [selectedIds, loadResumes])
 
   /** 批量下载进度文案（null 表示空闲） */
   const [downloadProgress, setDownloadProgress] = useState<string | null>(null)
@@ -218,9 +238,24 @@ export const useDashboardLogic = () => {
       return
     }
     const targetIds = new Set(ids)
-    const targets = resumes.filter(r => targetIds.has(r.id))
-    if (targets.length === 0) {
+    const targetSummaries = resumes.filter(r => targetIds.has(r.id))
+    if (targetSummaries.length === 0) {
       toast.error('还没有可下载的简历')
+      return
+    }
+
+    // Dashboard 只持有摘要；真正批量下载时再分批读取所选简历的完整 data。
+    const targets: SavedResume[] = []
+    const detailBatchSize = 4
+    for (let start = 0; start < targetSummaries.length; start += detailBatchSize) {
+      const batch = targetSummaries.slice(start, start + detailBatchSize)
+      const details = await Promise.all(batch.map(summary => getResume(summary.id)))
+      for (const detail of details) {
+        if (detail) targets.push(detail)
+      }
+    }
+    if (targets.length === 0) {
+      toast.error('读取简历内容失败，请刷新后重试')
       return
     }
 
@@ -361,11 +396,9 @@ export const useDashboardLogic = () => {
    */
   const updateAlias = useCallback(async (id: string, alias: string) => {
     await updateResumeAliasService(id, alias)
-    // 更新本地状态，避免重新加载
-    setResumes(prev => prev.map(r => 
-      r.id === id ? { ...r, alias, updatedAt: Date.now() } : r
-    ))
-  }, [])
+    // 更新时间会影响服务端排序，刷新当前页以免顺序与下一页重复。
+    await loadResumes()
+  }, [loadResumes])
 
   /**
    * 切换简历置顶状态
@@ -376,24 +409,15 @@ export const useDashboardLogic = () => {
     if (!resume) return
     const newPinned = !resume.pinned
     await updateResumePinnedService(id, newPinned)
-    // 更新本地状态并重新排序
-    setResumes(prev => {
-      const updated = prev.map(r => 
-        r.id === id ? { ...r, pinned: newPinned } : r
-      )
-      // 重新排序：置顶优先，然后按创建时间倒序
-      updated.sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1
-        if (!a.pinned && b.pinned) return 1
-        return b.createdAt - a.createdAt
-      })
-      return updated
-    })
-  }, [resumes])
+    // 置顶参与服务端全局排序；不能只在当前页内挪动。
+    await loadResumes()
+  }, [resumes, loadResumes])
 
   return {
     resumes,
+    totalCount,
     isLoading,
+    hasLoaded,
     createResume,
     deleteResume,
     duplicateResume,

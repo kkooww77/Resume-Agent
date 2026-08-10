@@ -1,6 +1,10 @@
 import type { Resume } from '../types/resume'
 import type { ResumeData } from '../pages/Workspace/v2/types'
-import type { SavedResume } from './storage/StorageAdapter'
+import type {
+  SavedResume,
+  SavedResumeSummary,
+  SavedResumeSummaryPage,
+} from './storage/StorageAdapter'
 import { LocalStorageAdapter } from './storage/LocalStorageAdapter'
 import { DatabaseAdapter } from './storage/DatabaseAdapter'
 import { stripPhotoFromSavedResume } from './storage/sanitizeResume'
@@ -11,6 +15,7 @@ const databaseAdapter = new DatabaseAdapter()
 
 /** 登录用户的本地 UI 状态与离线缓存按身份隔离，不能和匿名草稿共用。 */
 const CLOUD_CACHE_KEY_PREFIX = 'resume_cloud_cache:'
+const CLOUD_SUMMARY_CACHE_KEY_PREFIX = 'resume_cloud_summary_cache:'
 const PENDING_MIGRATION_KEY_PREFIX = 'resume_pending_migration:'
 const PINNED_IDS_KEY_PREFIX = 'resume_pinned_ids:'
 const CURRENT_ID_KEY_PREFIX = 'resume_current:'
@@ -105,6 +110,62 @@ function writeCloudCache(session: ResumeStorageSession, resumes: SavedResume[]):
   }
 }
 
+function toResumeSummary(resume: SavedResume): SavedResumeSummary {
+  return {
+    id: resume.id,
+    name: resume.name,
+    alias: resume.alias,
+    pinned: resume.pinned,
+    templateType: resume.templateType,
+    createdAt: resume.createdAt,
+    updatedAt: resume.updatedAt,
+  }
+}
+
+function readCloudSummaryCache(session: ResumeStorageSession): SavedResumeSummary[] {
+  const key = getScopedKey(CLOUD_SUMMARY_CACHE_KEY_PREFIX, session)
+  if (!key) return []
+  try {
+    const raw = localStorage.getItem(key)
+    const parsed = raw ? (JSON.parse(raw) as SavedResumeSummary[]) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writeCloudSummaryCache(
+  session: ResumeStorageSession,
+  summaries: SavedResumeSummary[],
+): void {
+  const key = getScopedKey(CLOUD_SUMMARY_CACHE_KEY_PREFIX, session)
+  if (!key || !isCurrentSession(session)) return
+  try {
+    localStorage.setItem(key, JSON.stringify(summaries))
+  } catch {
+    // 摘要缓存失败不影响云端主流程
+  }
+}
+
+function updateCloudSummaryCache(
+  session: ResumeStorageSession,
+  update: (summaries: SavedResumeSummary[]) => SavedResumeSummary[],
+): void {
+  if (!isCurrentSession(session)) return
+  writeCloudSummaryCache(session, update(readCloudSummaryCache(session)))
+}
+
+function mergeCloudSummaryCache(
+  session: ResumeStorageSession,
+  summaries: SavedResumeSummary[],
+): void {
+  updateCloudSummaryCache(session, cached => {
+    const merged = new Map(cached.map(item => [item.id, item]))
+    summaries.forEach(item => merged.set(item.id, item))
+    return [...merged.values()]
+  })
+}
+
 function readPendingMigration(session: ResumeStorageSession): PendingMigrationBatch | null {
   const key = getScopedKey(PENDING_MIGRATION_KEY_PREFIX, session)
   if (!key) return null
@@ -181,7 +242,75 @@ function setPinnedIds(session: ResumeStorageSession, ids: Set<string>): void {
   localStorage.setItem(key, JSON.stringify([...ids]))
 }
 
-export { SavedResume }
+export type { SavedResume, SavedResumeSummary, SavedResumeSummaryPage }
+
+function sortResumeSummaries(a: SavedResumeSummary, b: SavedResumeSummary): number {
+  if (a.pinned && !b.pinned) return -1
+  if (!a.pinned && b.pinned) return 1
+  if (a.updatedAt !== b.updatedAt) return b.updatedAt - a.updatedAt
+  return a.id.localeCompare(b.id)
+}
+
+/**
+ * 获取 Dashboard 列表摘要。
+ * 登录用户走不含完整 data 的云端接口；匿名用户仍从本地数据生成摘要。
+ */
+export async function getResumeSummaryPage(
+  offset: number,
+  limit: number,
+): Promise<SavedResumeSummaryPage> {
+  const session = captureSession()
+  const safeOffset = Math.max(0, Math.trunc(offset))
+  const safeLimit = Math.max(1, Math.min(50, Math.trunc(limit)))
+
+  if (isAuthenticated(session)) {
+    const pinnedIds = [...getPinnedIds(session)]
+    try {
+      const page = await databaseAdapter.getResumeSummaryPage(
+        safeOffset,
+        safeLimit,
+        pinnedIds,
+        { signal: session.signal },
+      )
+      if (!isCurrentSession(session)) {
+        return { items: [], total: 0, offset: safeOffset, limit: safeLimit }
+      }
+      mergeCloudSummaryCache(session, page.items)
+      return page
+    } catch (error) {
+      if (!isCurrentSession(session)) {
+        return { items: [], total: 0, offset: safeOffset, limit: safeLimit }
+      }
+      console.warn('[resumeStorage] getResumeSummaryPage failed, fallback to account cache:', error)
+      const pinnedSet = new Set(pinnedIds)
+      const cached = (
+        readCloudSummaryCache(session).length > 0
+          ? readCloudSummaryCache(session)
+          : readCloudCache(session).map(toResumeSummary)
+      )
+        .map(item => ({ ...item, pinned: pinnedSet.has(item.id) }))
+        .sort(sortResumeSummaries)
+      return {
+        items: cached.slice(safeOffset, safeOffset + safeLimit),
+        total: cached.length,
+        offset: safeOffset,
+        limit: safeLimit,
+      }
+    }
+  }
+
+  const localResumes = await localAdapter.getAllResumes({ signal: session.signal })
+  if (!isCurrentSession(session)) {
+    return { items: [], total: 0, offset: safeOffset, limit: safeLimit }
+  }
+  const summaries = localResumes.map(toResumeSummary).sort(sortResumeSummaries)
+  return {
+    items: summaries.slice(safeOffset, safeOffset + safeLimit),
+    total: summaries.length,
+    offset: safeOffset,
+    limit: safeLimit,
+  }
+}
 
 /**
  * 获取所有保存的简历
@@ -281,6 +410,10 @@ export async function saveResume(resume: Resume | ResumeData, id?: string): Prom
       ...cached.filter(item => item.id !== saved.id),
       saved,
     ])
+    updateCloudSummaryCache(session, cached => [
+      ...cached.filter(item => item.id !== saved.id),
+      toResumeSummary(saved),
+    ])
     setScopedCurrentResumeId(session, saved.id)
   }
   return saved
@@ -302,6 +435,7 @@ export async function deleteResume(id: string): Promise<boolean> {
   if (!isCurrentSession(session)) return false
   if (result && isAuthenticated(session)) {
     updateCloudCache(session, cached => cached.filter(item => item.id !== id))
+    updateCloudSummaryCache(session, cached => cached.filter(item => item.id !== id))
     if (getCurrentResumeId() === id) setScopedCurrentResumeId(session, null)
   }
   return result
@@ -325,6 +459,9 @@ export async function renameResume(id: string, newName: string): Promise<boolean
     updateCloudCache(session, cached => cached.map(item => (
       item.id === id ? { ...item, name: newName, updatedAt: Date.now() } : item
     )))
+    updateCloudSummaryCache(session, cached => cached.map(item => (
+      item.id === id ? { ...item, name: newName, updatedAt: Date.now() } : item
+    )))
   }
   return result
 }
@@ -345,6 +482,7 @@ export async function duplicateResume(id: string): Promise<SavedResume | null> {
   if (!isCurrentSession(session)) return null
   if (result && isAuthenticated(session)) {
     updateCloudCache(session, cached => [...cached, result])
+    updateCloudSummaryCache(session, cached => [...cached, toResumeSummary(result!)])
     setScopedCurrentResumeId(session, result.id)
   }
   return result
@@ -366,6 +504,9 @@ export async function updateResumeAlias(id: string, alias: string): Promise<bool
   if (!isCurrentSession(session)) return false
   if (result && isAuthenticated(session)) {
     updateCloudCache(session, cached => cached.map(item => (
+      item.id === id ? { ...item, alias, updatedAt: Date.now() } : item
+    )))
+    updateCloudSummaryCache(session, cached => cached.map(item => (
       item.id === id ? { ...item, alias, updatedAt: Date.now() } : item
     )))
   }
@@ -421,6 +562,7 @@ export async function syncLocalResumesToCurrentAccount(
   if (!isCurrentSession(session) || session.identity !== expectedIdentity) return []
 
   writeCloudCache(session, merged)
+  writeCloudSummaryCache(session, merged.map(toResumeSummary))
   clearPendingMigration(session, pendingBatch.id)
   return merged
 }

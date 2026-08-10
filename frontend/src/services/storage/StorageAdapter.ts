@@ -14,6 +14,16 @@ export interface SavedResume {
   updatedAt: number
 }
 
+/** 列表卡片所需的轻量摘要，不携带完整简历 data。 */
+export type SavedResumeSummary = Omit<SavedResume, 'data'>
+
+export interface SavedResumeSummaryPage {
+  items: SavedResumeSummary[]
+  total: number
+  offset: number
+  limit: number
+}
+
 export type StorageOperationContext = Readonly<{
   signal?: AbortSignal
 }>

@@ -1,6 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Header } from './components/Header'
 import { CreateCard } from './components/CreateCard'
 import { ResumeCard } from './components/ResumeCard'
@@ -15,13 +16,45 @@ import { saveResume, setCurrentResumeId } from '@/services/resumeStorage'
 import type { ResumeData } from '@/pages/Workspace/v2/types'
 import { matchCompanyLogo } from '@/pages/Workspace/v2/constants/companyLogos'
 import { highlightsToHtml, groupedHighlightsToHtml, skillsToHtml } from '@/utils/resumeRichtext'
+import './dashboard.css'
+
+const RESUMES_PER_PAGE = 8
+const FIRST_PAGE_RESUME_COUNT = RESUMES_PER_PAGE - 1
+
+const getPaginationItems = (currentPage: number, totalPages: number): Array<number | 'ellipsis'> => {
+  if (totalPages <= 5) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1)
+  }
+
+  const pages = new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1])
+  const sortedPages = [...pages]
+    .filter(page => page >= 1 && page <= totalPages)
+    .sort((a, b) => a - b)
+
+  const items: Array<number | 'ellipsis'> = []
+  sortedPages.forEach((page, index) => {
+    if (index > 0 && page - sortedPages[index - 1] > 1) items.push('ellipsis')
+    items.push(page)
+  })
+  return items
+}
 
 const ResumeDashboard = () => {
   const navigate = useNavigate()
+  const resumeGridRef = useRef<HTMLDivElement>(null)
   const [searchParams, setSearchParams] = useSearchParams()
+  const pageFromUrl = Number.parseInt(searchParams.get('page') || '1', 10)
+  const currentPage = Number.isFinite(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1
+  const pageSize = currentPage === 1 ? FIRST_PAGE_RESUME_COUNT : RESUMES_PER_PAGE
+  const pageOffset = currentPage === 1
+    ? 0
+    : FIRST_PAGE_RESUME_COUNT + (currentPage - 2) * RESUMES_PER_PAGE
   const { isAuthenticated, user, logout, openModal } = useAuth()
   const {
     resumes,
+    totalCount,
+    isLoading,
+    hasLoaded,
     createResume,
     deleteResume,
     duplicateResume,
@@ -44,7 +77,40 @@ const ResumeDashboard = () => {
     togglePin,
     // 刷新列表
     loadResumes
-  } = useDashboardLogic()
+  } = useDashboardLogic({ offset: pageOffset, limit: pageSize })
+
+  const totalPages = totalCount <= FIRST_PAGE_RESUME_COUNT
+    ? 1
+    : 1 + Math.ceil((totalCount - FIRST_PAGE_RESUME_COUNT) / RESUMES_PER_PAGE)
+  const activePage = Math.min(currentPage, totalPages)
+  const pageStart = pageOffset
+  const visibleResumes = resumes
+  const paginationItems = getPaginationItems(activePage, totalPages)
+
+  useEffect(() => {
+    if (!hasLoaded || currentPage <= totalPages) return
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (totalPages <= 1) next.delete('page')
+      else next.set('page', String(totalPages))
+      return next
+    }, { replace: true })
+  }, [currentPage, hasLoaded, setSearchParams, totalPages])
+
+  const changePage = useCallback((page: number) => {
+    const nextPage = Math.max(1, Math.min(page, totalPages))
+    if (nextPage === activePage) return
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (nextPage === 1) next.delete('page')
+      else next.set('page', String(nextPage))
+      return next
+    })
+
+    requestAnimationFrame(() => {
+      resumeGridRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' })
+    })
+  }, [activePage, setSearchParams, totalPages])
 
   // 登录时数据保存到数据库，未登录时保存到本地存储
   const hasConfiguredFolder = true // 总是有存储配置（本地或云端）
@@ -177,18 +243,16 @@ const ResumeDashboard = () => {
 
   return (
     <WorkspaceLayout>
-      <div className="h-full overflow-y-auto bg-[#F6F3EC] fresh:bg-slate-50 relative [background-image:linear-gradient(rgba(10,10,10,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(10,10,10,0.04)_1px,transparent_1px)] fresh:[background-image:none] [background-size:48px_48px]">
+      <div className="relative h-full overflow-x-hidden overflow-y-auto overscroll-y-contain bg-[#F6F3EC] fresh:bg-slate-50 [background-image:linear-gradient(rgba(10,10,10,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(10,10,10,0.04)_1px,transparent_1px)] fresh:[background-image:none] [background-size:48px_48px]">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="max-w-[1440px] mx-auto relative z-10 p-4 md:p-8"
+          className="resume-dashboard-canvas relative z-10 mx-auto max-w-[1440px]"
         >
-          {/* 方框(照搬 Builder Dashboard 外层容器):黑边 + 硬阴影,包裹全部内容;
-              min-h 用 vh 直接算(不依赖父级 flex/百分比继承链,避免嵌套 flex-col 导致高度塌陷),
-              内容少时方框仍撑满可视区域,不再露出画布背景 */}
-          <div className="border border-black fresh:border-slate-200 dark:border-white bg-[#F6F3EC] fresh:bg-white dark:bg-[#1C1C1C] shadow-[8px_8px_0px_0px_#000000] fresh:shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-[8px_8px_0px_0px_#ffffff] min-h-[calc(100vh-2rem)] space-y-6 p-6 rounded-none fresh:rounded-xl">
+          {/* 按当前断点扣除画布上下留白，保证内容较少时铺满视口且不产生额外滚动。 */}
+          <div className="resume-dashboard-frame rounded-none border border-black bg-[#F6F3EC] shadow-[8px_8px_0px_0px_#000000] fresh:rounded-xl fresh:border-slate-200 fresh:bg-white fresh:shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:border-white dark:bg-[#1C1C1C] dark:shadow-[8px_8px_0px_0px_#ffffff]">
           <motion.div
             className="flex w-full items-center justify-center"
             initial={{ y: 8, opacity: 0 }}
@@ -228,7 +292,8 @@ const ResumeDashboard = () => {
             onBatchDelete={batchDelete}
             onBatchDownload={() => batchDownload(Array.from(selectedIds))}
             downloadProgress={downloadProgress}
-            totalCount={resumes.length}
+            totalCount={totalCount}
+            selectableCount={resumes.length}
             isMultiSelectMode={isMultiSelectMode}
             onToggleMultiSelectMode={toggleMultiSelectMode}
             onExitMultiSelectMode={exitMultiSelectMode}
@@ -237,20 +302,23 @@ const ResumeDashboard = () => {
           />
 
           <motion.div
-            className="flex-1 w-full pb-16"
+            className="resume-dashboard-results w-full pb-4"
             initial={{ y: 8, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.2 }}
           >
-            <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <CreateCard onClick={createResume} />
+            <div
+              ref={resumeGridRef}
+              className="resume-dashboard-grid grid w-full scroll-mt-4 grid-cols-1 content-start gap-4 sm:grid-cols-2 xl:grid-cols-4"
+              aria-busy={isLoading}
+            >
+              {activePage === 1 && <CreateCard onClick={createResume} />}
 
-              <AnimatePresence>
-                {resumes.map((resume, idx) => (
+              {!isLoading && visibleResumes.map((resume, idx) => (
                   <ResumeCard
                     key={resume.id}
                     resume={resume}
-                    index={idx + 1}
+                    index={pageStart + idx + 1}
                     onEdit={editResume}
                     onDelete={deleteResume}
                     onDuplicate={duplicateResume}
@@ -264,8 +332,81 @@ const ResumeDashboard = () => {
                     onTogglePin={togglePin}
                   />
                 ))}
-              </AnimatePresence>
+
+              {isLoading && Array.from({ length: pageSize }, (_, index) => (
+                <div
+                  key={`resume-skeleton-${index}`}
+                  className="resume-dashboard-card border border-black/15 bg-black/[0.035] fresh:rounded-xl fresh:border-slate-200 fresh:bg-slate-100/70"
+                  aria-hidden="true"
+                />
+              ))}
             </div>
+
+            {totalPages > 1 && (
+              <nav
+                className="resume-dashboard-pagination flex items-center justify-center"
+                aria-label="简历列表分页"
+              >
+                <div className="inline-flex items-center gap-1.5 [font-variant-numeric:tabular-nums]">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={isLoading || activePage === 1}
+                    onClick={() => changePage(activePage - 1)}
+                    className="h-10 w-10 rounded-none border-black bg-transparent shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-black/5 disabled:border-black/20 disabled:bg-transparent fresh:rounded-lg fresh:border-slate-200 fresh:bg-white fresh:text-slate-600 fresh:shadow-none fresh:hover:bg-slate-100 fresh:disabled:border-slate-200 fresh:disabled:bg-slate-50 fresh:disabled:text-slate-300"
+                    aria-label="上一页"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="flex items-center gap-1.5" aria-label={`第 ${activePage} 页，共 ${totalPages} 页`}>
+                    {paginationItems.map((item, index) => item === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="flex h-10 w-6 items-center justify-center text-sm text-black/50 fresh:text-slate-400"
+                        aria-hidden="true"
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <Button
+                        key={item}
+                        type="button"
+                        variant={item === activePage ? 'default' : 'outline'}
+                        size="icon"
+                        disabled={isLoading}
+                        onClick={() => changePage(item)}
+                        className={`h-10 w-10 rounded-none border-black shadow-none hover:translate-x-0 hover:translate-y-0 fresh:rounded-lg fresh:font-sans fresh:normal-case fresh:tracking-normal fresh:shadow-none ${
+                          item === activePage
+                            ? 'bg-[#4285F4] text-white hover:bg-[#3367D6] fresh:border-blue-500 fresh:bg-[#4285F4] fresh:hover:bg-[#3367D6]'
+                            : 'bg-transparent hover:bg-black/5 fresh:border-slate-200 fresh:bg-white fresh:text-slate-600 fresh:hover:bg-slate-100'
+                        }`}
+                        aria-label={`第 ${item} 页`}
+                        aria-current={item === activePage ? 'page' : undefined}
+                      >
+                        {item}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={isLoading || activePage === totalPages}
+                    onClick={() => changePage(activePage + 1)}
+                    className="h-10 w-10 rounded-none border-black bg-transparent shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-black/5 disabled:border-black/20 disabled:bg-transparent fresh:rounded-lg fresh:border-slate-200 fresh:bg-white fresh:text-slate-600 fresh:shadow-none fresh:hover:bg-slate-100 fresh:disabled:border-slate-200 fresh:disabled:bg-slate-50 fresh:disabled:text-slate-300"
+                    aria-label="下一页"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <span className="sr-only" aria-live="polite">
+                  当前第 {activePage} 页，共 {totalPages} 页
+                </span>
+              </nav>
+            )}
           </motion.div>
           </div>
         </motion.div>

@@ -1,0 +1,97 @@
+.resume-dashboard-canvas {
+  padding: 1rem;
+}
+
+.resume-dashboard-frame {
+  display: flex;
+  min-height: calc(100dvh - 2rem);
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.resume-dashboard-header {
+  padding-bottom: 1.5rem;
+}
+
+.resume-dashboard-card {
+  height: 340px;
+}
+
+.resume-dashboard-pagination {
+  margin-top: 2.25rem;
+}
+
+@media (min-width: 768px) {
+  .resume-dashboard-canvas {
+    padding: 2rem;
+  }
+
+  .resume-dashboard-frame {
+    min-height: calc(100dvh - 4rem);
+  }
+}
+
+@media (min-width: 1280px) {
+  .resume-dashboard-grid {
+    min-height: 696px;
+  }
+}
+
+/* 1080p 浏览器内容区通常不足 980px：保持四列，只收紧纵向密度。 */
+@media (min-width: 1280px) and (max-height: 980px) {
+  .resume-dashboard-canvas {
+    padding: 1rem;
+  }
+
+  .resume-dashboard-frame {
+    min-height: calc(100dvh - 2rem);
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .resume-dashboard-header {
+    padding-bottom: 1rem;
+  }
+
+  .resume-dashboard-card {
+    height: 300px;
+  }
+
+  .resume-dashboard-grid {
+    min-height: 616px;
+  }
+
+  .resume-dashboard-pagination {
+    margin-top: 1.25rem;
+  }
+
+  .resume-dashboard-results {
+    padding-bottom: 0.5rem;
+  }
+
+  .resume-dashboard-card-content {
+    padding-top: 1.5rem;
+  }
+
+  .resume-dashboard-card-icon {
+    margin-bottom: 0.75rem;
+    padding: 0.625rem;
+  }
+
+  .resume-dashboard-card-title {
+    margin-bottom: 0.25rem;
+  }
+
+  .resume-dashboard-card-alias {
+    margin-bottom: 0.5rem;
+  }
+
+  .resume-dashboard-card-meta {
+    padding-top: 0.5rem;
+  }
+
+  .resume-dashboard-card-footer {
+    padding-bottom: 0.75rem;
+  }
+}

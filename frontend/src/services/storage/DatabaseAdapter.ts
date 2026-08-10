@@ -3,7 +3,13 @@ import { getAuthHeaders } from '@/lib/authHeaders'
 import { getApiBaseUrl } from '@/lib/runtimeEnv'
 import type { Resume } from '@/types/resume'
 import type { ResumeData } from '@/pages/Workspace/v2/types'
-import type { SavedResume, StorageAdapter, StorageOperationContext } from './StorageAdapter'
+import type {
+  SavedResume,
+  SavedResumeSummary,
+  SavedResumeSummaryPage,
+  StorageAdapter,
+  StorageOperationContext,
+} from './StorageAdapter'
 
 // withCredentials:configureAuthWebRequests 只 patch 全局 axios/fetch,
 // axios.create 自建实例吃不到——走 auth-web(3000)代理时 BetterAuth cookie
@@ -30,6 +36,7 @@ function toSavedResume(payload: any): SavedResume {
     id: payload.id,
     name: payload.name,
     alias: payload.alias || undefined,  // 确保 alias 被正确解析
+    pinned: Boolean(payload.pinned),
     templateType,
     data: payload.data,
     createdAt: payload.created_at ? Date.parse(payload.created_at) : Date.now(),
@@ -37,7 +44,42 @@ function toSavedResume(payload: any): SavedResume {
   }
 }
 
+function toSavedResumeSummary(payload: any): SavedResumeSummary {
+  return {
+    id: payload.id,
+    name: payload.name,
+    alias: payload.alias || undefined,
+    pinned: Boolean(payload.pinned),
+    createdAt: payload.created_at ? Date.parse(payload.created_at) : Date.now(),
+    updatedAt: payload.updated_at ? Date.parse(payload.updated_at) : Date.now(),
+  }
+}
+
 export class DatabaseAdapter implements StorageAdapter {
+  async getResumeSummaryPage(
+    offset: number,
+    limit: number,
+    pinnedIds: string[],
+    context?: StorageOperationContext,
+  ): Promise<SavedResumeSummaryPage> {
+    const { data } = await apiClient.get('/api/resumes/summaries', {
+      headers: getAuthHeaders(),
+      signal: context?.signal,
+      params: {
+        offset,
+        limit,
+        ...(pinnedIds.length > 0 ? { pinned_ids: pinnedIds.slice(0, 100).join(',') } : {}),
+      },
+    })
+    const items = Array.isArray(data?.items) ? data.items.map(toSavedResumeSummary) : []
+    return {
+      items,
+      total: Number.isFinite(Number(data?.total)) ? Number(data.total) : items.length,
+      offset: Number.isFinite(Number(data?.offset)) ? Number(data.offset) : offset,
+      limit: Number.isFinite(Number(data?.limit)) ? Number(data.limit) : limit,
+    }
+  }
+
   async getAllResumes(context?: StorageOperationContext): Promise<SavedResume[]> {
     const { data } = await apiClient.get('/api/resumes', {
       headers: getAuthHeaders(),

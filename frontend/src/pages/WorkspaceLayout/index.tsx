@@ -282,7 +282,7 @@ export default function WorkspaceLayout({
     agentSession?.sessionsRefreshKey ?? sessionsRefreshKey;
 
   return (
-    <div className="h-screen flex overflow-hidden bg-[#F0F0E8] fresh:bg-slate-50 dark:bg-[#1C1C1C] font-sans selection:bg-[#4285F4] selection:text-white">
+    <div className="flex h-dvh overflow-hidden bg-[#F0F0E8] font-sans selection:bg-[#4285F4] selection:text-white fresh:bg-slate-50 dark:bg-[#1C1C1C]">
       {/* 左侧固定边栏 */}
       <aside
         className={cn(

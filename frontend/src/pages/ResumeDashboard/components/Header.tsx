@@ -22,6 +22,8 @@ interface HeaderProps {
   downloadProgress?: string | null;
   /** 简历总数 */
   totalCount?: number;
+  /** 当前页可选择的简历数 */
+  selectableCount?: number;
   /** 是否处于多选模式 */
   isMultiSelectMode?: boolean;
   /** 切换多选模式 */
@@ -43,13 +45,14 @@ export const Header: React.FC<HeaderProps> = ({
   onBatchDownload,
   downloadProgress = null,
   totalCount = 0,
+  selectableCount = 0,
   isMultiSelectMode = false,
   onToggleMultiSelectMode,
   onExitMultiSelectMode,
   onSelectAll,
   onClearSelection,
 }) => {
-  const allSelected = totalCount > 0 && selectedCount === totalCount;
+  const allSelected = selectableCount > 0 && selectedCount === selectableCount;
 
   const [importMenuOpen, setImportMenuOpen] = useState(false);
   const [skinPickerOpen, setSkinPickerOpen] = useState(false);
@@ -72,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
   }, [importMenuOpen]);
 
   return (
-    <div className="border-b border-black fresh:border-slate-200 px-0 pb-6 shrink-0 bg-[#F6F3EC] fresh:bg-white dark:bg-[#1C1C1C] relative z-30 flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+    <div className="resume-dashboard-header relative z-30 flex shrink-0 flex-col justify-between gap-4 border-b border-black bg-[#F6F3EC] px-0 fresh:border-slate-200 fresh:bg-white dark:bg-[#1C1C1C] lg:flex-row lg:items-start">
       {/* 左侧标题区：复刻自 /builder/dashboard */}
       <div>
         <h1 className="font-serifcn fresh:font-hero text-3xl md:text-4xl font-black fresh:font-bold text-slate-800 dark:text-white tracking-tight leading-none">
@@ -110,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
               variant="outline"
               className="h-11 px-5"
             >
-              {allSelected ? "取消全选" : "全选"}
+              {allSelected ? "取消选择" : "全选本页"}
             </Button>
           )}
 
@@ -127,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="h-11 px-5"
             >
               <Download className="mr-2 h-4 w-4" />
-              {downloadProgress || (allSelected ? "下载全部" : "下载")}
+              {downloadProgress || (allSelected ? "下载本页" : "下载")}
             </Button>
           </motion.div>
         )}
@@ -171,8 +174,7 @@ export const Header: React.FC<HeaderProps> = ({
         />
 
         {/* 统一导入下拉：AI 智能上传 / JSON 导入 */}
-        {(onAIImport || onImport) && (
-          <div className="relative" ref={importMenuRef}>
+        <div className="relative" ref={importMenuRef}>
             <button
               onClick={() => setImportMenuOpen((v) => !v)}
               className={cn(
@@ -214,8 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
             )}
-          </div>
-        )}
+        </div>
 
         {/* 创建按钮 */}
         <Button

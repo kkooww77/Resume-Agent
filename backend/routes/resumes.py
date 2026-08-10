@@ -8,9 +8,10 @@ import logging
 import re
 import time
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from pydantic import BaseModel
+from sqlalchemy import case
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -41,6 +42,23 @@ class ResumeResponse(BaseModel):
     data: Dict[str, Any]
     created_at: Optional[str]
     updated_at: Optional[str]
+
+
+class ResumeSummaryResponse(BaseModel):
+    """Dashboard 列表摘要：刻意不返回体积较大的完整 data。"""
+    id: str
+    name: str
+    alias: Optional[str] = None
+    pinned: bool = False
+    created_at: Optional[str]
+    updated_at: Optional[str]
+
+
+class ResumeSummaryPageResponse(BaseModel):
+    items: List[ResumeSummaryResponse]
+    total: int
+    offset: int
+    limit: int
 
 
 class SyncRequest(BaseModel):
@@ -74,6 +92,70 @@ def list_resumes(
         )
         for r in resumes
     ]
+
+
+@router.get("/summaries", response_model=ResumeSummaryPageResponse)
+def list_resume_summaries(
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=8, ge=1, le=50),
+    pinned_ids: Optional[str] = Query(default=None, max_length=4000),
+    current_user: AppUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """分页获取 Dashboard 卡片摘要，不读取和传输完整简历 JSON。"""
+    t0 = time.perf_counter()
+    # 置顶是当前账号在浏览器中的 UI 偏好。把 ID 传给查询后在数据库层
+    # 完成全局排序，避免先分页、再在单页内置顶导致卡片跑错页。
+    requested_pinned_ids = {
+        resume_id.strip()
+        for resume_id in (pinned_ids or "").split(",")[:100]
+        if resume_id.strip()
+    }
+    pinned_rank = case(
+        (Resume.id.in_(requested_pinned_ids), 1),
+        else_=0,
+    ) if requested_pinned_ids else 0
+    sort_columns = [Resume.updated_at.desc(), Resume.id.asc()]
+    if requested_pinned_ids:
+        sort_columns.insert(0, pinned_rank.desc())
+
+    base_query = db.query(Resume).filter(Resume.user_id == current_user.id)
+    total = base_query.count()
+    rows = (
+        base_query
+        .with_entities(
+            Resume.id,
+            Resume.name,
+            Resume.alias,
+            Resume.created_at,
+            Resume.updated_at,
+        )
+        .order_by(*sort_columns)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    logger.info(
+        f"[DashboardPerf] /api/resumes/summaries user_id={current_user.id} "
+        f"offset={offset} limit={limit} returned={len(rows)} total={total} 耗时 {elapsed_ms:.1f}ms"
+    )
+    return ResumeSummaryPageResponse(
+        items=[
+            ResumeSummaryResponse(
+                id=row.id,
+                name=row.name,
+                alias=row.alias,
+                pinned=row.id in requested_pinned_ids,
+                created_at=row.created_at.isoformat() if row.created_at else None,
+                updated_at=row.updated_at.isoformat() if row.updated_at else None,
+            )
+            for row in rows
+        ],
+        total=total,
+        offset=offset,
+        limit=limit,
+    )
 
 
 @router.get("/{resume_id}", response_model=ResumeResponse)

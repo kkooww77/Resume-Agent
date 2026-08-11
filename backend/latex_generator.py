@@ -32,6 +32,23 @@ def _safe_float(value: Any, default: float, min_value: float, max_value: float) 
     return max(min_value, min(max_value, num))
 
 
+def _normalize_latex_font_size(value: Any) -> int:
+    """返回合法的 LaTeX 基础字号；只接受 8–12 范围内的整数。"""
+    if isinstance(value, bool):
+        return 11
+
+    if isinstance(value, int):
+        font_size = value
+    elif isinstance(value, float) and value.is_integer():
+        font_size = int(value)
+    elif isinstance(value, str) and value.strip().isdigit():
+        font_size = int(value.strip())
+    else:
+        return 11
+
+    return font_size if 8 <= font_size <= 12 else 11
+
+
 def _px_to_pt(px: float) -> float:
     """
     将 UI 的“px 调整量”映射到 TeX pt。
@@ -290,10 +307,8 @@ def json_to_latex(resume_data: Dict[str, Any], section_order: List[str] = None) 
     # 获取全局设置
     global_settings = resume_data.get('globalSettings') or {}
     
-    # 字体大小设置 (9, 10, 11, 12)
-    font_size = global_settings.get('latexFontSize', 11)
-    if font_size not in [9, 10, 11, 12]:
-        font_size = 11
+    # 字体大小设置（8 - 12pt，步进 1pt）
+    font_size = _normalize_latex_font_size(global_settings.get('latexFontSize', 11))
     
     # 页面边距设置
     margin_setting = global_settings.get('latexMargin', 'standard')

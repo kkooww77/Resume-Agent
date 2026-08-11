@@ -1,16 +1,17 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{resume}[2015/05/25 An elegant Résumé class]
 
-% 声明字体大小选项，并传递给 article 类
-\DeclareOption{9pt}{\PassOptionsToClass{9pt}{article}}
-\DeclareOption{10pt}{\PassOptionsToClass{10pt}{article}}
-\DeclareOption{11pt}{\PassOptionsToClass{11pt}{article}}
-\DeclareOption{12pt}{\PassOptionsToClass{12pt}{article}}
-\DeclareOption*{\PassOptionsToClass{\CurrentOption}{article}}
-\ExecuteOptions{11pt}  % 默认 11pt
+% 字体大小只保留一个最终值，避免默认 11pt 覆盖用户选择的 8–10pt
+\newcommand{\resumeBaseFontSize}{11pt}
+\DeclareOption{8pt}{\renewcommand{\resumeBaseFontSize}{8pt}}
+\DeclareOption{9pt}{\renewcommand{\resumeBaseFontSize}{9pt}}
+\DeclareOption{10pt}{\renewcommand{\resumeBaseFontSize}{10pt}}
+\DeclareOption{11pt}{\renewcommand{\resumeBaseFontSize}{11pt}}
+\DeclareOption{12pt}{\renewcommand{\resumeBaseFontSize}{12pt}}
+\DeclareOption*{\PassOptionsToClass{\CurrentOption}{extarticle}}
 \ProcessOptions\relax
 
-\LoadClass{article}
+\LoadClass[\resumeBaseFontSize]{extarticle}
 
 % disable indent globally
 \setlength{\parindent}{0pt}

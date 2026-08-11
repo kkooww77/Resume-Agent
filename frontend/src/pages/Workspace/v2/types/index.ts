@@ -165,7 +165,7 @@ export interface GlobalSettings {
   experienceGap?: number  // 经历项之间的间距（ex），默认 1，0 表示无间距
   projectExperienceGap?: number  // 项目经历项之间的间距（ex），默认 1，0 表示无间距
   // LaTeX 排版设置
-  latexFontSize?: number  // LaTeX 字体大小: 9, 10, 11, 12
+  latexFontSize?: number  // LaTeX 字体大小: 8 - 12pt，步进 1pt
   latexMargin?: 'tight' | 'compact' | 'standard' | 'relaxed' | 'wide'  // 页面边距
   latexLineSpacing?: number  // 行间距: 0.9 - 1.5
   latexHeaderTopGapPx?: number  // 头部顶部空白（px，可为负）

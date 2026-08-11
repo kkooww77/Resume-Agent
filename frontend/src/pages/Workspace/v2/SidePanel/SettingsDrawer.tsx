@@ -6,7 +6,7 @@
  */
 import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, Check, X } from 'lucide-react'
+import { ChevronDown, Check, Minus, Plus, X } from 'lucide-react'
 import { cn } from '../../../../lib/utils'
 import type { GlobalSettings } from '../types'
 import { FormattingControls } from '../../../Builder/components/FormattingControls'
@@ -94,13 +94,9 @@ function DropdownSelect<T extends string | number>({
   )
 }
 
-// 字体大小选项 (LaTeX pt)
-const FONT_SIZE_OPTIONS = [
-  { value: 9, label: '9PT' },
-  { value: 10, label: '10PT' },
-  { value: 11, label: '11PT (默认)' },
-  { value: 12, label: '12PT' },
-]
+const MIN_FONT_SIZE = 8
+const MAX_FONT_SIZE = 12
+const DEFAULT_FONT_SIZE = 11
 
 // 页面边距选项（单位用「英寸」更易读）
 const PAGE_MARGIN_OPTIONS: { value: 'tight' | 'compact' | 'standard' | 'relaxed' | 'wide'; label: string }[] = [
@@ -157,6 +153,91 @@ const LINE_SPACING_WITH_CUSTOM = [
   ...LINE_SPACING_OPTIONS,
   { value: LINE_SPACING_CUSTOM_VALUE as number, label: '自定义...' },
 ]
+
+function FontSizeControl({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const normalizedValue = Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, Math.round(value || DEFAULT_FONT_SIZE)))
+  const [draftValue, setDraftValue] = useState(String(normalizedValue))
+
+  useEffect(() => {
+    setDraftValue(String(normalizedValue))
+  }, [normalizedValue])
+
+  const commitValue = (rawValue: string) => {
+    const trimmedValue = rawValue.trim()
+    const parsed = trimmedValue === '' ? Number.NaN : Number(trimmedValue)
+    const nextValue = Number.isInteger(parsed)
+      ? Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, parsed))
+      : normalizedValue
+    setDraftValue(String(nextValue))
+    if (nextValue !== normalizedValue) onChange(nextValue)
+  }
+
+  const adjustValue = (delta: number) => {
+    const nextValue = Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, normalizedValue + delta))
+    setDraftValue(String(nextValue))
+    if (nextValue !== normalizedValue) onChange(nextValue)
+  }
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-3">
+        <label className="font-mono fresh:font-sans text-xs font-bold text-[#444850] fresh:text-gray-600 dark:text-slate-300">
+          字体大小
+        </label>
+        <span className="font-mono fresh:font-sans text-[11px] text-slate-400 tabular-nums">8–12 pt</span>
+      </div>
+      <div className="flex h-10 overflow-hidden rounded-none fresh:rounded-md border border-black fresh:border-slate-200 bg-white focus-within:ring-2 focus-within:ring-[#1a73e8] fresh:focus-within:border-blue-400">
+        <button
+          type="button"
+          aria-label="减小字体"
+          disabled={normalizedValue <= MIN_FONT_SIZE}
+          onClick={() => adjustValue(-1)}
+          className="grid w-11 shrink-0 place-items-center border-r border-black fresh:border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-white"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
+          <input
+            type="number"
+            min={MIN_FONT_SIZE}
+            max={MAX_FONT_SIZE}
+            step={1}
+            inputMode="numeric"
+            aria-label="字体大小，单位 pt"
+            value={draftValue}
+            onChange={(event) => {
+              const nextDraft = event.target.value
+              setDraftValue(nextDraft)
+              const parsed = Number(nextDraft)
+              if (Number.isInteger(parsed) && parsed >= MIN_FONT_SIZE && parsed <= MAX_FONT_SIZE) {
+                onChange(parsed)
+              }
+            }}
+            onBlur={() => commitValue(draftValue)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                commitValue(draftValue)
+                event.currentTarget.blur()
+              }
+            }}
+            className="w-8 appearance-none bg-transparent text-center text-sm font-semibold tabular-nums text-slate-800 outline-none [MozAppearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+          <span className="text-xs font-medium text-slate-400">pt</span>
+        </div>
+        <button
+          type="button"
+          aria-label="增大字体"
+          disabled={normalizedValue >= MAX_FONT_SIZE}
+          onClick={() => adjustValue(1)}
+          className="grid w-11 shrink-0 place-items-center border-l border-black fresh:border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-white"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="mt-1.5 text-[11px] leading-snug text-slate-400">影响整份 PDF 的基础字号，默认 11pt</p>
+    </div>
+  )
+}
 
 // 行间距控件：自定义下拉 + 自定义输入
 function LineSpacingControl({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -393,30 +474,10 @@ function FormatTab({
 
   return (
     <div className="space-y-5">
-      {/* 字体大小 */}
-      <div>
-        <label className={labelClass}>字体大小</label>
-        <div className="flex flex-nowrap gap-1.5">
-          {FONT_SIZE_OPTIONS.map((opt) => {
-            const isActive = (globalSettings.latexFontSize || 11) === opt.value
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => updateGlobalSettings({ latexFontSize: opt.value })}
-                className={cn(
-                  'flex-1 min-w-0 px-2 py-1.5 text-xs font-bold rounded-none fresh:rounded-md border transition-all',
-                  isActive
-                    ? 'bg-blue-50 text-slate-900 border-blue-200 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff] dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600'
-                    : 'bg-white border-black fresh:border-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400 hover:border-blue-400 hover:text-slate-900'
-                )}
-              >
-                {opt.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <FontSizeControl
+        value={globalSettings.latexFontSize || DEFAULT_FONT_SIZE}
+        onChange={(value) => updateGlobalSettings({ latexFontSize: value })}
+      />
 
       {/* 页面边距 */}
       <div>

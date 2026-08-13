@@ -4,13 +4,15 @@
 # 不支持 tool_choice=required（诊断/建议引擎依赖）；关闭思维链后支持，
 # 且不产 reasoning token（更快），产品自有 thought 呈现体系不需要模型内置思维链
 [llm]
-model = "deepseek-v4-flash"
-base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-api_key = "${DASHSCOPE_API_KEY}"
+# 2026-08-13 主对话切到 ruoli.dev 的 claude-sonnet-4-6：
+# DashScope 账户欠费(返回 400 Arrearage)导致聊天全线不可用，切中转站恢复服务。
+# 注意不要加 extra_body.enable_thinking —— 那是 DashScope 通义特有参数，Claude 不认。
+model = "claude-sonnet-4-6"
+base_url = "https://ruoli.dev/v1"
+api_key = "${RUOLI_API_KEY}"
 max_tokens = 8192
 temperature = 0.3
 api_type = "openai"
-extra_body = { enable_thinking = false }
 
 # Vision model (如果需要)
 [llm.vision]

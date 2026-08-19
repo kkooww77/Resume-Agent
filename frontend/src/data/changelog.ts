@@ -15,6 +15,16 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.5.3',
+    date: '2026-08-19',
+    added: [
+      '网站启用新域名 cococv.cn，原地址会自动跳转过来，收藏和旧链接都不受影响',
+    ],
+    fixed: [
+      '修复 AI 助手偶尔无法回复的问题',
+    ],
+  },
+  {
     version: '3.5.2',
     date: '2026-07-21',
     added: [

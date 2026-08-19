@@ -1,19 +1,11 @@
 <div align="center">
 
-
-###  在线体验网址：https://resumegenkk.xyz
-
-
-###  本次的版本更新已经可以做到编辑简历Latex比较稳定、后期不再更新纯前后端相关的内容
-###  我新开了一个仓库去做 Agent 了
-
-
 # 🤖 Resume-Agent
 
 ### 一句话输入，AI 帮你生成可编辑、可导出的专业简历
 
 <p>
-  <a href="https://resumegenkk.xyz"><img src="https://img.shields.io/badge/🌐_在线体验-Live_Demo-36BCF7?style=for-the-badge" alt="Live Demo" /></a>
+  <a href="https://cococv.cn"><img src="https://img.shields.io/badge/🌐_在线体验-Live_Demo-36BCF7?style=for-the-badge" alt="Live Demo" /></a>
   <a href="https://github.com/WyRainBow/Resume-Agent/stargazers"><img src="https://img.shields.io/github/stars/WyRainBow/Resume-Agent?style=for-the-badge&color=yellow" alt="Stars" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" /></a>
 </p>
@@ -60,7 +52,7 @@
 </tr>
 <tr>
 <td width="50%"><b>AI 对话</b><br/><img src="assets/readme/2026-05-23-agent-chat.png" alt="AI 对话" /></td>
-<td width="50%" valign="middle" align="center">👉 <a href="https://resumegenkk.xyz">在线体验完整功能</a></td>
+<td width="50%" valign="middle" align="center">👉 <a href="https://cococv.cn">在线体验完整功能</a></td>
 </tr>
 </table>
 

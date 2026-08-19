@@ -931,7 +931,7 @@ export default function LandingPage() {
             rel="noopener noreferrer"
             className="text-xs font-mono fresh:font-sans text-slate-400 dark:text-slate-500 hover:text-black dark:hover:text-white transition-colors"
           >
-            粤ICP备2026011127号
+            粤ICP备2026011127号-2
           </a>
         </div>
       </footer>

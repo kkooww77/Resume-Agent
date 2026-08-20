@@ -14,9 +14,9 @@
   <circle cx="40" cy="165" r="25" fill="#3498db" opacity="0.2"/>
   <text x="40" y="172" fill="#3498db" font-size="20" font-weight="bold" text-anchor="middle" font-family="sans-serif">T</text>
   <text x="80" y="155" fill="#333" font-size="14" font-weight="bold" font-family="sans-serif">tangtao</text>
-  <text x="80" y="172" fill="#666" font-size="11" font-family="sans-serif">77 commits</text>
-  <rect x="200" y="148" width="217.60225045830964" height="20" fill="#3498db" rx="4"/>
-  <text x="422.60225045830964" y="162" fill="#333" font-size="12" font-weight="bold" font-family="sans-serif">+68845</text>
-  <text x="200" y="188" fill="#27ae60" font-size="10" font-family="sans-serif">+76249</text>
-  <text x="270" y="188" fill="#e74c3c" font-size="10" font-family="sans-serif">-7404</text>
+  <text x="80" y="172" fill="#666" font-size="11" font-family="sans-serif">78 commits</text>
+  <rect x="200" y="148" width="219.277451166319" height="20" fill="#3498db" rx="4"/>
+  <text x="424.277451166319" y="162" fill="#333" font-size="12" font-weight="bold" font-family="sans-serif">+69375</text>
+  <text x="200" y="188" fill="#27ae60" font-size="10" font-family="sans-serif">+76899</text>
+  <text x="270" y="188" fill="#e74c3c" font-size="10" font-family="sans-serif">-7524</text>
 </svg>

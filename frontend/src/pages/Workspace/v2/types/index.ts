@@ -95,7 +95,9 @@ export interface Experience {
 export interface OpenSource {
   id: string
   name: string
+  projectNameFontSize?: number  // 项目名称字号（px），默认 15
   repo?: string
+  repoUrlFontSize?: number  // 仓库地址字号（px），默认 12
   role?: string
   date?: string
   description: string  // HTML 格式
@@ -120,6 +122,8 @@ export interface Award {
 export interface Project {
   id: string
   name: string
+  projectNameFontSize?: number  // 项目名称字号（px），默认 15
+  projectLinkFontSize?: number  // 项目链接字号（px），默认 12
   role: string
   date: string
   description: string  // HTML 格式

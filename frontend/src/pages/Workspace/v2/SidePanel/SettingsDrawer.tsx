@@ -304,8 +304,8 @@ function HeaderGapControl({
       <p className="text-[11px] text-slate-500 dark:text-slate-500 leading-snug">{hint}</p>
       <input
         type="range"
-        min={-80}
-        max={80}
+        min={-5}
+        max={5}
         step={0.5}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}

@@ -17,6 +17,10 @@ import {
   EDITOR_PANEL_CLASS,
 } from './editorStyles'
 import { MonthYearRangePicker } from '../shared/MonthYearRangePicker'
+import { FontSizePicker } from '../shared/FontSizePicker'
+
+const PROJECT_NAME_FONT_SIZE_OPTIONS = [12, 13, 14, 15, 16, 17, 18, 20]
+const REPO_URL_FONT_SIZE_OPTIONS = [9, 10, 11, 12, 13, 14, 15, 16]
 
 interface OpenSourcePanelProps {
   openSources: OpenSource[]
@@ -24,6 +28,7 @@ interface OpenSourcePanelProps {
   onDelete: (id: string) => void
   onReorder: (openSources: OpenSource[]) => void
   onAIImport?: () => void
+  resumeData?: ResumeData
   globalSettings?: GlobalSettings
   updateGlobalSettings?: (settings: Partial<GlobalSettings>) => void
 }
@@ -52,7 +57,7 @@ function OpenSourceItem({
   const [showCustomLabel, setShowCustomLabel] = useState(false)
   const dragControls = useDragControls()
 
-  const handleChange = (field: keyof OpenSource, value: string | boolean) => {
+  const handleChange = (field: keyof OpenSource, value: string | boolean | number | undefined) => {
     onUpdate({ ...openSource, [field]: value })
   }
 
@@ -130,7 +135,24 @@ function OpenSourceItem({
                     transition={{ duration: 0.2, delay: 0 * 0.05, ease: 'easeOut' }}
                     className="grid grid-cols-2 gap-4"
                   >
-                    <Field index={0} label="项目名称" value={openSource.name} onChange={(v) => handleChange('name', v)} placeholder="如：Seata-go" />
+                    <Field
+                      index={0}
+                      label="项目名称"
+                      value={openSource.name}
+                      onChange={(v) => handleChange('name', v)}
+                      placeholder="如：Seata-go"
+                      labelExtra={
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-neutral-500">
+                          <span>字号</span>
+                          <FontSizePicker
+                            value={openSource.projectNameFontSize ?? 15}
+                            defaultValue={15}
+                            options={PROJECT_NAME_FONT_SIZE_OPTIONS}
+                            onChange={(size) => handleChange('projectNameFontSize', size)}
+                          />
+                        </div>
+                      }
+                    />
                     <Field index={1} label="角色" value={openSource.role || ''} onChange={(v) => handleChange('role', v)} placeholder="如：贡献者" />
                   </motion.div>
                   <motion.div
@@ -144,30 +166,41 @@ function OpenSourceItem({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: 2 * 0.05, ease: 'easeOut' }}
                     >
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                         <label className={EDITOR_LABEL_CLASS}>仓库地址</label>
-                        {updateGlobalSettings && (
-                          <div className="flex items-center gap-1 bg-[#F1F2F5] dark:bg-[#2A2A2A] rounded-none fresh:rounded-md p-0.5">
-                            {([
-                              { value: 'below', label: '下方' },
-                              { value: 'inline', label: '右侧' },
-                              { value: 'icon', label: '图标' },
-                            ] as const).map((opt) => (
-                              <button
-                                key={opt.value}
-                                onClick={() => updateGlobalSettings({ openSourceRepoDisplay: opt.value })}
-                                className={cn(
-                                  'px-2 py-0.5 text-[10px] font-medium rounded transition-all',
-                                  (globalSettings?.openSourceRepoDisplay || 'below') === opt.value
-                                    ? 'bg-white dark:bg-neutral-700 text-indigo-600 dark:text-indigo-400 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]'
-                                    : 'text-gray-400 dark:text-neutral-500 hover:text-gray-600'
-                                )}
-                              >
-                                {opt.label}
-                              </button>
-                            ))}
+                        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-neutral-500">
+                            <span>字号</span>
+                            <FontSizePicker
+                              value={openSource.repoUrlFontSize ?? 12}
+                              defaultValue={12}
+                              options={REPO_URL_FONT_SIZE_OPTIONS}
+                              onChange={(size) => handleChange('repoUrlFontSize', size)}
+                            />
                           </div>
-                        )}
+                          {updateGlobalSettings && (
+                            <div className="flex items-center gap-1 bg-[#F1F2F5] dark:bg-[#2A2A2A] rounded-none fresh:rounded-md p-0.5">
+                              {([
+                                { value: 'below', label: '下方' },
+                                { value: 'inline', label: '右侧' },
+                                { value: 'icon', label: '图标' },
+                              ] as const).map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  onClick={() => updateGlobalSettings({ openSourceRepoDisplay: opt.value })}
+                                  className={cn(
+                                    'px-2 py-0.5 text-[10px] font-medium rounded transition-all',
+                                    (globalSettings?.openSourceRepoDisplay || 'below') === opt.value
+                                      ? 'bg-white dark:bg-neutral-700 text-indigo-600 dark:text-indigo-400 shadow-[2px_2px_0px_0px_#000000] fresh:shadow-sm dark:shadow-[2px_2px_0px_0px_#ffffff]'
+                                      : 'text-gray-400 dark:text-neutral-500 hover:text-gray-600'
+                                  )}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <Field index={2} value={openSource.repo || ''} onChange={(v) => handleChange('repo', v)} placeholder="GitHub 链接" />
                       {/* 链接前缀设置（图标模式下不显示） */}
@@ -264,8 +297,10 @@ export default function OpenSourcePanel({ openSources, onUpdate, onDelete, onReo
     const newItem: OpenSource = {
       id: generateId(),
       name: '新开源项目',
+      projectNameFontSize: 15,
       role: '',
       repo: '',
+      repoUrlFontSize: 12,
       date: '',
       description: '',
       visible: true,

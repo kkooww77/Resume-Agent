@@ -45,6 +45,8 @@ const ProjectPanel = ({
     const newProject: Project = {
       id: generateId(),
       name: '新项目',
+      projectNameFontSize: 15,
+      projectLinkFontSize: 12,
       role: '',
       date: '',
       description: '',

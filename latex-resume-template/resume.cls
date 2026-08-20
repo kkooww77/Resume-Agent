@@ -51,6 +51,8 @@
 \RequirePackage[hidelinks]{hyperref}
 % ulem：给链接文字加下划线（normalem 避免把 \emph 误变下划线），\uline 支持长 URL 自动换行
 \RequirePackage[normalem]{ulem}
+% 仓库地址保持正文字体，同时允许在 /、-、_ 等 URL 边界自然换行
+\urlstyle{same}
 \setlist{noitemsep} % removes spacing from items but leaves space around the whole list
 %\setlist{nosep} % removes all vertical spacing within and around the list
 \setlist[itemize]{topsep=0.25em, leftmargin=*, labelsep=0.5em, label=\footnotesize$\bullet$, itemindent=0em}
@@ -88,6 +90,24 @@
     \hfill
     {\normalsize\makebox[\daterightcolwidth][r]{#2}}%
   }%
+}
+% 开源项目的“标题 + 右侧仓库地址 + 日期”专用排版。
+% 标题与仓库地址各自拥有独立列，长链接只在右侧列内换行，不会挤乱项目名。
+% 两列使用垂直居中对齐，让较小字号的仓库地址落在项目标题的视觉中线上。
+\newcommand{\datedsubsectionwithrepo}[3]{%
+  \par\addvspace{1ex}%
+  {\large
+    \noindent
+    \parbox[t]{\dateleftcolwidth}{%
+      \parbox[c]{0.48\linewidth}{\raggedright\strut #1}%
+      \hfill
+      \raisebox{1pt}{\parbox[c]{0.50\linewidth}{\raggedright #2}}%
+    }%
+    \hfill
+    \parbox[t]{\daterightcolwidth}{\raggedleft\normalsize\strut #3}%
+    \par
+  }%
+  \vspace{0.5ex}%
 }
 \newcommand{\datedline}[2]{%
   {\par

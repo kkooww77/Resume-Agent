@@ -10,6 +10,10 @@ import type { Project, ResumeData, GlobalSettings } from '../types'
 import Field from './Field'
 import { EDITOR_ITEM_BODY_CLASS, EDITOR_ITEM_CLASS, EDITOR_ITEM_HEADER_CLASS, EDITOR_LABEL_CLASS } from './editorStyles'
 import { MonthYearRangePicker } from '../shared/MonthYearRangePicker'
+import { FontSizePicker } from '../shared/FontSizePicker'
+
+const TITLE_FONT_SIZE_OPTIONS = [12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28]
+const LINK_FONT_SIZE_OPTIONS = [9, 10, 11, 12, 13, 14, 15, 16]
 
 interface ProjectItemProps {
   project: Project
@@ -38,7 +42,7 @@ const ProjectEditor = ({
 }) => {
   const [showCustomLabel, setShowCustomLabel] = useState(false)
 
-  const handleChange = (field: keyof Project, value: string | boolean) => {
+  const handleChange = (field: keyof Project, value: string | boolean | number) => {
     onSave({
       ...project,
       [field]: value,
@@ -65,6 +69,17 @@ const ProjectEditor = ({
             value={project.name}
             onChange={(value) => handleChange('name', value)}
             placeholder="请输入项目名称"
+            labelExtra={(
+              <div className="flex items-center gap-1.5 rounded-none fresh:rounded-md border border-slate-200 bg-slate-50 px-1.5 py-1 dark:border-white dark:bg-[#2A2A2A]">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-neutral-400">字号</span>
+                <FontSizePicker
+                  value={project.projectNameFontSize ?? 15}
+                  onChange={(size) => handleChange('projectNameFontSize', size)}
+                  options={TITLE_FONT_SIZE_OPTIONS}
+                  defaultValue={15}
+                />
+              </div>
+            )}
           />
           <Field
             index={1}
@@ -85,30 +100,41 @@ const ProjectEditor = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 2 * 0.05, ease: 'easeOut' }}
           >
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-1 gap-2">
               <label className={EDITOR_LABEL_CLASS}>项目链接</label>
-              {updateGlobalSettings && (
-                <div className="flex items-center gap-1 bg-[#F1F2F5] dark:bg-[#2A2A2A] rounded-none fresh:rounded-md p-0.5">
-                  {([
-                    { value: 'below', label: '下方' },
-                    { value: 'inline', label: '右侧' },
-                    { value: 'icon', label: '图标' },
-                  ] as const).map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => updateGlobalSettings({ projectLinkDisplay: opt.value })}
-                      className={cn(
-                        'px-2 py-0.5 text-[10px] font-medium rounded transition-all',
-                        (globalSettings?.projectLinkDisplay || 'inline') === opt.value
-                          ? 'bg-white dark:bg-neutral-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                          : 'text-gray-400 dark:text-neutral-500 hover:text-gray-600'
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-neutral-500">
+                  <span>字号</span>
+                  <FontSizePicker
+                    value={project.projectLinkFontSize ?? 12}
+                    onChange={(size) => handleChange('projectLinkFontSize', size)}
+                    options={LINK_FONT_SIZE_OPTIONS}
+                    defaultValue={12}
+                  />
                 </div>
-              )}
+                {updateGlobalSettings && (
+                  <div className="flex items-center gap-1 bg-[#F1F2F5] dark:bg-[#2A2A2A] rounded-none fresh:rounded-md p-0.5">
+                    {([
+                      { value: 'below', label: '下方' },
+                      { value: 'inline', label: '右侧' },
+                      { value: 'icon', label: '图标' },
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => updateGlobalSettings({ projectLinkDisplay: opt.value })}
+                        className={cn(
+                          'px-2 py-0.5 text-[10px] font-medium rounded transition-all',
+                          (globalSettings?.projectLinkDisplay || 'inline') === opt.value
+                            ? 'bg-white dark:bg-neutral-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                            : 'text-gray-400 dark:text-neutral-500 hover:text-gray-600'
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <Field
               index={2}

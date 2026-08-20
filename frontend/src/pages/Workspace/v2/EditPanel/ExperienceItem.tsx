@@ -327,19 +327,7 @@ function LogoSelector({
   )
 }
 
-const COMPANY_FONT_SIZE_OPTIONS = [
-  { value: 13, label: '13' },
-  { value: 14, label: '14' },
-  { value: 15, label: '15' },
-  { value: 16, label: '16' },
-  { value: 17, label: '17' },
-  { value: 18, label: '18' },
-  { value: 20, label: '20' },
-  { value: 22, label: '22' },
-  { value: 24, label: '24' },
-  { value: 26, label: '26' },
-  { value: 28, label: '28' },
-]
+const COMPANY_FONT_SIZE_OPTIONS = [12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28]
 
 const ExperienceEditor = ({
   experience,
@@ -493,7 +481,8 @@ const ExperienceEditor = ({
                   <FontSizePicker
                     value={experience.companyNameFontSize ?? globalSettings?.companyNameFontSize ?? 15}
                     onChange={(size) => handleChange('companyNameFontSize', size)}
-                    options={COMPANY_FONT_SIZE_OPTIONS.map(opt => opt.value)}
+                    options={COMPANY_FONT_SIZE_OPTIONS}
+                    defaultValue={15}
                   />
                 </div>
               ) : undefined}

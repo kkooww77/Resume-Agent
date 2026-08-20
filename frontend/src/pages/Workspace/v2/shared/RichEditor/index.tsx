@@ -50,6 +50,9 @@ import './tiptap.css'
 const logDebug = (_message: string, _data?: Record<string, any>) => {}
 // #endregion agent log helper
 
+// 与用户提供的参考色一致：Office 深蓝（仅开放这一档，避免简历颜色失控）
+const RESUME_ACCENT_BLUE = '#2F5597'
+
 const logBoldDebugSnapshot = (editor: Editor, phase: 'before' | 'after') => {
   try {
     const { from, to } = editor.state.selection
@@ -326,6 +329,27 @@ const RichEditor = ({
             tooltip="下划线"
           >
             <UnderlineIcon className="h-5 w-5" />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              const currentColor = String(editor.getAttributes('textStyle').color || '').toLowerCase()
+              const command = editor.chain().focus()
+              if (currentColor === RESUME_ACCENT_BLUE.toLowerCase() || currentColor === 'rgb(47, 85, 151)') {
+                command.unsetColor().run()
+              } else {
+                command.setColor(RESUME_ACCENT_BLUE).run()
+              }
+            }}
+            isActive={(() => {
+              const currentColor = String(editor.getAttributes('textStyle').color || '').toLowerCase()
+              return currentColor === RESUME_ACCENT_BLUE.toLowerCase() || currentColor === 'rgb(47, 85, 151)'
+            })()}
+            tooltip="蓝色文字（再次点击恢复）"
+          >
+            <span className="relative inline-flex h-5 w-5 items-center justify-center text-[15px] font-semibold leading-none">
+              A
+              <span className="absolute inset-x-0 bottom-0 h-0.5" style={{ backgroundColor: RESUME_ACCENT_BLUE }} />
+            </span>
           </MenuButton>
         </div>
 

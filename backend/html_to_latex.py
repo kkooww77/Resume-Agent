@@ -22,6 +22,33 @@ except ImportError:  # 兼容以 backend 为 cwd 的脚本场景
     from ats_normalize import normalize_ats_text
 
 
+# 富文本编辑器当前仅开放这一档正文强调色。
+RICH_TEXT_BLUE_HEX = "2F5597"
+
+
+def _normalize_supported_color(style: str) -> str | None:
+    """从 span style 中提取并规范化当前支持的富文本颜色。"""
+    match = re.search(r'(?:^|;)\s*color\s*:\s*([^;]+)', style or '', re.IGNORECASE)
+    if not match:
+        return None
+
+    raw = match.group(1).strip()
+    if re.fullmatch(r'#[0-9a-fA-F]{6}', raw):
+        color_hex = raw[1:].upper()
+    else:
+        rgb_match = re.fullmatch(
+            r'rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*[\d.]+)?\s*\)',
+            raw,
+            re.IGNORECASE,
+        )
+        if not rgb_match:
+            return None
+        channels = tuple(max(0, min(255, int(value))) for value in rgb_match.groups())
+        color_hex = ''.join(f'{channel:02X}' for channel in channels)
+
+    return color_hex if color_hex == RICH_TEXT_BLUE_HEX else None
+
+
 def _markdown_to_html(text: str) -> str:
     """Convert basic Markdown to HTML so html_to_latex can process it.
     Handles: **bold**, *italic*, # headings, - bullet lists, 1. ordered lists, blank lines → paragraphs.
@@ -98,7 +125,9 @@ class HTMLToLatexConverter(HTMLParser):
         self.tag_stack: List[str] = []
         self.in_list = False
         self.list_type = None  # 'ul' or 'ol'
+        self._list_stack: List[str] = []
         self._anchor_hrefs: List[str] = []  # <a> 的 href 栈，支持嵌套 / 无 href 情况
+        self._span_color_stack: List[bool] = []
         
     def handle_starttag(self, tag: str, attrs: List[Tuple[str, str]]):
         tag = tag.lower()
@@ -113,11 +142,18 @@ class HTMLToLatexConverter(HTMLParser):
         elif tag == 'ul':
             self.in_list = True
             self.list_type = 'ul'
-            # 使用圆点符号，并设置对齐参数：leftmargin=* 自动计算，labelsep 控制标签和文本间距
-            self.result.append(r'\begin{itemize}[label=\footnotesize$\bullet$,parsep=0.2ex,leftmargin=*,labelsep=0.5em,itemindent=0em]' + '\n')
+            self._list_stack.append('ul')
+            # 常见文档层级：一级使用实心圆点，二级及更深层使用空心圆点。
+            # 显式指定 label，避免 enumitem/模板默认值把所有层级都渲染成实心点。
+            marker = r'\footnotesize$\bullet$' if len(self._list_stack) == 1 else r'\footnotesize$\circ$'
+            self.result.append(
+                r'\begin{itemize}[label=' + marker +
+                r',parsep=0.2ex,leftmargin=*,labelsep=0.5em,itemindent=0em]' + '\n'
+            )
         elif tag == 'ol':
             self.in_list = True
             self.list_type = 'ol'
+            self._list_stack.append('ol')
             self.result.append(r'\begin{enumerate}' + '\n')
         elif tag == 'li':
             self.result.append(r'  \item ')
@@ -126,6 +162,11 @@ class HTMLToLatexConverter(HTMLParser):
         elif tag == 'p':
             # 段落开始，不需要特殊处理
             pass
+        elif tag == 'span':
+            color_hex = _normalize_supported_color(dict(attrs).get('style', ''))
+            self._span_color_stack.append(bool(color_hex))
+            if color_hex:
+                self.result.append(r'\textcolor[HTML]{' + color_hex + '}{')
         elif tag == 'h1':
             self.result.append(r'\section*{')
         elif tag == 'h2':
@@ -149,17 +190,25 @@ class HTMLToLatexConverter(HTMLParser):
             self.result.append('}')
         elif tag == 'ul':
             self.result.append(r'\end{itemize}' + '\n')
-            self.in_list = False
-            self.list_type = None
+            if self._list_stack:
+                self._list_stack.pop()
+            self.in_list = bool(self._list_stack)
+            self.list_type = self._list_stack[-1] if self._list_stack else None
         elif tag == 'ol':
             self.result.append(r'\end{enumerate}' + '\n')
-            self.in_list = False
-            self.list_type = None
+            if self._list_stack:
+                self._list_stack.pop()
+            self.in_list = bool(self._list_stack)
+            self.list_type = self._list_stack[-1] if self._list_stack else None
         elif tag == 'li':
             self.result.append('\n')
         elif tag == 'p':
             # 段落结束，添加换行
             self.result.append('\n\n')
+        elif tag == 'span':
+            has_color = self._span_color_stack.pop() if self._span_color_stack else False
+            if has_color:
+                self.result.append('}')
         elif tag in ('h1', 'h2', 'h3'):
             self.result.append('}\n')
         elif tag == 'a':

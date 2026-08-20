@@ -321,12 +321,20 @@ class ResumeNormalizer:
                 # 处理字段映射
                 for key, value in item.items():
                     key_lower = key.lower()
+                    key_compact = key_lower.replace('_', '').replace('-', '').replace(' ', '')
 
                     # 项目名称映射
-                    if key_lower == 'title' or any(k in key_lower for k in ['项目', 'project', '名称', 'name']):
+                    if key_compact == 'projectnamefontsize':
+                        standardized_item['projectNameFontSize'] = value
+                    elif key_compact == 'repourlfontsize':
+                        standardized_item['repoUrlFontSize'] = value
+                    elif key_lower == 'title' or any(k in key_lower for k in ['项目', 'project', '名称', 'name']):
                         standardized_item['name'] = value
+                    # 编辑器已保存的贡献描述必须继续作为正文；不能被下方的角色兜底误判
+                    elif key_lower == 'description' or key_compact in ['描述', '贡献描述']:
+                        standardized_item['description'] = value
                     # 角色映射
-                    elif key_lower == 'subtitle' or any(k in key_lower for k in ['角色', 'role', '描述', 'description']):
+                    elif key_lower == 'subtitle' or any(k in key_lower for k in ['角色', 'role']):
                         # 如果items为空，将subtitle作为description
                         if not item.get('items') and not item.get('description'):
                             standardized_item['description'] = value

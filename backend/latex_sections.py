@@ -5,8 +5,35 @@ LaTeX Section 生成器模块
 """
 from typing import Dict, Any, List
 from .latex_utils import escape_latex
-from .html_to_latex import html_to_latex, html_to_latex_items
+from .html_to_latex import escape_href, html_to_latex, html_to_latex_items
+import math
 import re
+
+
+def _apply_px_font_size(
+    latex_content: str,
+    raw_size: Any,
+    default_px: float,
+    *,
+    apply_default: bool = False,
+) -> str:
+    """将前端 px 字号转换为 LaTeX pt；可按需显式应用默认字号。"""
+    if isinstance(raw_size, bool) or raw_size is None:
+        return latex_content
+    try:
+        px_size = float(raw_size)
+    except (TypeError, ValueError):
+        return latex_content
+    if (
+        not math.isfinite(px_size)
+        or not 8 <= px_size <= 32
+        or (px_size == default_px and not apply_default)
+    ):
+        return latex_content
+
+    pt_size = round(px_size * 0.75, 2)
+    baseline = round(pt_size * 1.2, 2)
+    return f"{{\\fontsize{{{pt_size:g}pt}}{{{baseline:g}pt}}\\selectfont {latex_content}}}"
 
 def generate_section_summary(resume_data: Dict[str, Any], section_titles: Dict[str, str] = None) -> List[str]:
     """生成个人总结"""
@@ -336,6 +363,11 @@ def generate_section_projects(resume_data: Dict[str, Any], section_titles: Dict[
             
             if full_title:
                 heading_title = f"\\textbf{{{full_title}}}"
+                heading_title = _apply_px_font_size(
+                    heading_title,
+                    p.get('projectNameFontSize'),
+                    15,
+                )
 
                 escaped_label = escape_latex(link_label) if link_label else ''
                 label_prefix = f"{escaped_label}: " if escaped_label else ''
@@ -348,9 +380,16 @@ def generate_section_projects(resume_data: Dict[str, Any], section_titles: Dict[
                         heading_title = f"{heading_title}\\hspace{{0.3em}}\\href{{{link}}}{{\\faGithub}}"
                     elif link_display == 'inline':
                         if link.startswith("http://") or link.startswith("https://"):
-                            heading_title = f"{heading_title}\\hspace{{0.5em}}{label_prefix}\\textit{{\\href{{{link}}}{{{display_link}}}}}"
+                            link_content = f"{label_prefix}\\textit{{\\href{{{link}}}{{{display_link}}}}}"
                         else:
-                            heading_title = f"{heading_title}\\hspace{{0.5em}}{label_prefix}\\textit{{{display_link}}}"
+                            link_content = f"{label_prefix}\\textit{{{display_link}}}"
+                        link_content = _apply_px_font_size(
+                            link_content,
+                            p.get('projectLinkFontSize', 12),
+                            12,
+                            apply_default=True,
+                        )
+                        heading_title = f"{heading_title}\\hspace{{0.5em}}{link_content}"
 
                 content.append(f"\\datedsubsection{{{heading_title}}}{{{date}}}")
 
@@ -365,9 +404,16 @@ def generate_section_projects(resume_data: Dict[str, Any], section_titles: Dict[
                     escaped_label = escape_latex(link_label) if link_label else ''
                     label_prefix = f"{escaped_label}: " if escaped_label else ''
                     if link.startswith("http://") or link.startswith("https://"):
-                        content.append(f"{label_prefix}\\textit{{\\href{{{link}}}{{{display_link}}}}}")
+                        link_content = f"{label_prefix}\\textit{{\\href{{{link}}}{{{display_link}}}}}"
                     else:
-                        content.append(f"{label_prefix}\\textit{{{display_link}}}")
+                        link_content = f"{label_prefix}\\textit{{{display_link}}}"
+                    link_content = _apply_px_font_size(
+                        link_content,
+                        p.get('projectLinkFontSize', 12),
+                        12,
+                        apply_default=True,
+                    )
+                    content.append(link_content)
 
                 # 检查是否有 items（子项目结构）
                 items = p.get('items') or []
@@ -408,13 +454,8 @@ def generate_section_projects(resume_data: Dict[str, Any], section_titles: Dict[
                             if converted.strip():
                                 # 如果 HTML 已包含列表结构，直接添加
                                 if '\\begin{itemize}' in converted or '\\begin{enumerate}' in converted:
-                                    # 正确的正则：\[ 和 \] 在原始字符串中匹配普通方括号
-                                    # 使用 leftmargin=* 与实习经历对齐（html_to_latex 默认设置）
-                                    converted = re.sub(
-                                        r'\\begin\{itemize\}(\[[^\]]*\])?',
-                                        r'\\begin{itemize}[label=\\footnotesize$\\bullet$,parsep=0.2ex,itemsep=0ex,leftmargin=*,labelsep=0.5em,itemindent=0em]',
-                                        converted
-                                    )
+                                    # html_to_latex 已按列表层级指定圆点：一级实心、二级空心。
+                                    # 不要在章节层再次重写 itemize，否则会抹掉嵌套列表标记。
                                     converted = re.sub(
                                         r'\\begin\{enumerate\}(\[[^\]]*\])?',
                                         r'\\begin{enumerate}[leftmargin=*,labelsep=0.5em,topsep=0ex,partopsep=0ex]',
@@ -619,11 +660,7 @@ def generate_section_education(resume_data: Dict[str, Any], section_titles: Dict
                             converted = html_to_latex(d)
                             if converted.strip():
                                 if '\\begin{itemize}' in converted or '\\begin{enumerate}' in converted:
-                                    converted = re.sub(
-                                        r'\\begin\{itemize\}(\[[^\]]*\])?',
-                                        r'\\begin{itemize}[label=\\footnotesize$\\bullet$,parsep=0.2ex,itemsep=0ex,leftmargin=*,labelsep=0.5em,itemindent=0em]',
-                                        converted
-                                    )
+                                    # 保留 html_to_latex 生成的分层无序列表标记。
                                     converted = re.sub(
                                         r'\\begin\{enumerate\}(\[[^\]]*\])?',
                                         r'\\begin{enumerate}[leftmargin=*,labelsep=0.5em,topsep=0ex,partopsep=0ex]',
@@ -715,6 +752,11 @@ def generate_section_opensource(resume_data: Dict[str, Any], section_titles: Dic
             item_title = escape_latex(
                 os_item.get('title') or os_item.get('name') or ''
             )
+            item_title = _apply_px_font_size(
+                f"\\textbf{{{item_title}}}",
+                os_item.get('projectNameFontSize'),
+                15,
+            )
             subtitle = escape_latex(
                 os_item.get('subtitle') or os_item.get('role') or ''
             )
@@ -725,23 +767,37 @@ def generate_section_opensource(resume_data: Dict[str, Any], section_titles: Dic
                        os_item.get('url') or '')
 
             # 获取日期（如果有）
-            date = os_item.get('date') or ''
+            date = escape_latex(os_item.get('date') or '')
             if date:
                 subtitle = f"{subtitle} ({date})" if subtitle else date
 
             # 根据设置决定仓库链接位置
             if repo_display == 'icon' and repo_url:
                 # 图标模式：在标题旁放一个链接符号
-                escaped_url = escape_latex(repo_url)
-                subsection_title = f"\\textbf{{{item_title}}}\\hspace{{0.3em}}\\href{{{repo_url}}}{{\\faGithub}}"
+                subsection_title = f"{item_title}\\hspace{{0.3em}}\\href{{{escape_href(repo_url)}}}{{\\faGithub}}"
             elif repo_display == 'inline' and repo_url:
-                escaped_url = escape_latex(repo_url)
                 escaped_label = escape_latex(repo_label) if repo_label else ''
                 label_prefix = f"{escaped_label}: " if escaped_label else ''
-                subsection_title = f"\\textbf{{{item_title}}}\\hspace{{0.5em}}\\textit{{{label_prefix}\\href{{{repo_url}}}{{{escaped_url}}}}}"
+                visible_url = repo_url.replace('{', '%7B').replace('}', '%7D')
+                repo_content = (
+                    f"\\textit{{{label_prefix}\\href{{{escape_href(repo_url)}}}"
+                    f"{{\\nolinkurl{{{visible_url}}}}}}}"
+                )
+                repo_content = _apply_px_font_size(
+                    repo_content,
+                    os_item.get('repoUrlFontSize', 12),
+                    12,
+                    apply_default=True,
+                )
             else:
-                subsection_title = f"\\textbf{{{item_title}}}"
-            content.append(f"\\datedsubsection{{{subsection_title}}}{{{subtitle}}}")
+                subsection_title = item_title
+
+            if repo_display == 'inline' and repo_url:
+                content.append(
+                    f"\\datedsubsectionwithrepo{{{item_title}}}{{{repo_content}}}{{{subtitle}}}"
+                )
+            else:
+                content.append(f"\\datedsubsection{{{subsection_title}}}{{{subtitle}}}")
 
             # 处理贡献描述 - description 是 HTML 格式
             description = os_item.get('description') or ''
@@ -750,13 +806,24 @@ def generate_section_opensource(resume_data: Dict[str, Any], section_titles: Dic
             item_contents = []
 
             if repo_url and repo_display not in ('inline', 'icon'):
-                escaped_url = escape_latex(repo_url)
                 escaped_label = escape_latex(repo_label) if repo_label else ''
                 label_prefix = f"{escaped_label}: " if escaped_label else ''
                 if repo_url.startswith("http://") or repo_url.startswith("https://"):
-                    item_contents.append(f"{label_prefix}\\href{{{repo_url}}}{{{escaped_url}}}")
+                    visible_url = repo_url.replace('{', '%7B').replace('}', '%7D')
+                    repo_content = (
+                        f"{label_prefix}\\href{{{escape_href(repo_url)}}}"
+                        f"{{\\nolinkurl{{{visible_url}}}}}"
+                    )
                 else:
-                    item_contents.append(f"{label_prefix}{escaped_url}")
+                    repo_content = f"{label_prefix}{escape_latex(repo_url)}"
+                item_contents.append(
+                    _apply_px_font_size(
+                        repo_content,
+                        os_item.get('repoUrlFontSize', 12),
+                        12,
+                        apply_default=True,
+                    )
+                )
 
             if description:
                 # description 是 HTML 格式，需要转换

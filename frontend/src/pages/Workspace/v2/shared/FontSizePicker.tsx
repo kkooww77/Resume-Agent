@@ -12,6 +12,7 @@ interface FontSizePickerProps {
   value: number
   onChange: (size: number) => void
   options?: number[]
+  defaultValue?: number
   className?: string
 }
 
@@ -21,6 +22,7 @@ export function FontSizePicker({
   value,
   onChange,
   options = DEFAULT_OPTIONS,
+  defaultValue = 15,
   className
 }: FontSizePickerProps) {
   const [open, setOpen] = useState(false)
@@ -53,7 +55,7 @@ export function FontSizePicker({
 
   const clearValue = (e: React.MouseEvent) => {
     e.stopPropagation()
-    onChange(15) // 恢复默认值
+    onChange(defaultValue)
   }
 
   return (
@@ -72,7 +74,7 @@ export function FontSizePicker({
         )}
       >
         <span>{value}px</span>
-        {value !== 15 && (
+        {value !== defaultValue && (
           <button
             type="button"
             onClick={clearValue}

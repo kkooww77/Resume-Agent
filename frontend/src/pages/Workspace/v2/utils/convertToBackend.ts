@@ -48,6 +48,8 @@ export interface BackendResumeData {
   }[]
   projects: {
     title: string
+    projectNameFontSize?: number
+    projectLinkFontSize?: number
     subtitle: string
     date: string
     highlights: string[]
@@ -55,8 +57,10 @@ export interface BackendResumeData {
   }[]
   open_source: {
     title: string
+    projectNameFontSize?: number
     subtitle: string
     repoUrl: string
+    repoUrlFontSize?: number
     date: string
     items: string[]
   }[]
@@ -158,6 +162,8 @@ export function convertToBackendFormat(data: ResumeData): BackendResumeData {
     })),
     projects: data.projects.filter(p => p.visible !== false).map((p) => ({
       title: stripHtmlTags(p.name),
+      ...(p.projectNameFontSize ? { projectNameFontSize: p.projectNameFontSize } : {}),
+      ...(p.projectLinkFontSize ? { projectLinkFontSize: p.projectLinkFontSize } : {}),
       subtitle: stripHtmlTags(p.role),
       date: p.date,
       highlights: [p.description],
@@ -165,8 +171,10 @@ export function convertToBackendFormat(data: ResumeData): BackendResumeData {
     })),
     open_source: (data.openSource || []).filter(o => o.visible !== false).map((o) => ({
       title: stripHtmlTags(o.name),
+      ...(o.projectNameFontSize ? { projectNameFontSize: o.projectNameFontSize } : {}),
       subtitle: stripHtmlTags(o.role || ''),
       repoUrl: o.repo || '',
+      ...(o.repoUrlFontSize ? { repoUrlFontSize: o.repoUrlFontSize } : {}),
       date: o.date || '',
       items: [o.description],
     })),

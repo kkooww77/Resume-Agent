@@ -65,12 +65,12 @@
   margin-left: 0;
 }
 
-/* 二级及更深列表 marker：浅色 */
+/* 二级及更深列表 marker：保持黑色；二级无序列表由 circle 显示为空心圆 */
 .ProseMirror ul ul > li::marker,
 .ProseMirror ul ol > li::marker,
 .ProseMirror ol ul > li::marker,
 .ProseMirror ol ol > li::marker {
-  color: #d1d5db;
+  color: #111111;
 }
 
 /* 段落样式 */

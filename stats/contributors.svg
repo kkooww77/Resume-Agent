@@ -5,18 +5,18 @@
   <circle cx="40" cy="85" r="25" fill="#e74c3c" opacity="0.2"/>
   <text x="40" y="92" fill="#e74c3c" font-size="20" font-weight="bold" text-anchor="middle" font-family="sans-serif">W</text>
   <text x="80" y="75" fill="#333" font-size="14" font-weight="bold" font-family="sans-serif">WyRainBow</text>
-  <text x="80" y="92" fill="#666" font-size="11" font-family="sans-serif">1446 commits</text>
+  <text x="80" y="92" fill="#666" font-size="11" font-family="sans-serif">1447 commits</text>
   <rect x="200" y="68" width="350.0" height="20" fill="#e74c3c" rx="4"/>
-  <text x="555.0" y="82" fill="#333" font-size="12" font-weight="bold" font-family="sans-serif">+110733</text>
-  <text x="200" y="108" fill="#27ae60" font-size="10" font-family="sans-serif">+780769</text>
+  <text x="555.0" y="82" fill="#333" font-size="12" font-weight="bold" font-family="sans-serif">+110745</text>
+  <text x="200" y="108" fill="#27ae60" font-size="10" font-family="sans-serif">+780781</text>
   <text x="270" y="108" fill="#e74c3c" font-size="10" font-family="sans-serif">-670036</text>
 
   <circle cx="40" cy="165" r="25" fill="#3498db" opacity="0.2"/>
   <text x="40" y="172" fill="#3498db" font-size="20" font-weight="bold" text-anchor="middle" font-family="sans-serif">T</text>
   <text x="80" y="155" fill="#333" font-size="14" font-weight="bold" font-family="sans-serif">tangtao</text>
   <text x="80" y="172" fill="#666" font-size="11" font-family="sans-serif">78 commits</text>
-  <rect x="200" y="148" width="219.277451166319" height="20" fill="#3498db" rx="4"/>
-  <text x="424.277451166319" y="162" fill="#333" font-size="12" font-weight="bold" font-family="sans-serif">+69375</text>
+  <rect x="200" y="148" width="219.25369091155358" height="20" fill="#3498db" rx="4"/>
+  <text x="424.2536909115536" y="162" fill="#333" font-size="12" font-weight="bold" font-family="sans-serif">+69375</text>
   <text x="200" y="188" fill="#27ae60" font-size="10" font-family="sans-serif">+76899</text>
   <text x="270" y="188" fill="#e74c3c" font-size="10" font-family="sans-serif">-7524</text>
 </svg>

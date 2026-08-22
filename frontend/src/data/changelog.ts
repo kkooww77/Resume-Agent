@@ -15,6 +15,18 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.5.4',
+    date: '2026-08-21',
+    added: [
+      '项目名称、仓库地址可以单独调整字号',
+      '正文支持标蓝色重点',
+    ],
+    fixed: [
+      '开源经历里过长的仓库地址不再挤乱项目名称',
+      '多级列表的第二层改用空心圆点，层次更清楚',
+    ],
+  },
+  {
     version: '3.5.3',
     date: '2026-08-19',
     added: [

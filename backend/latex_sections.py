@@ -9,6 +9,11 @@ from .html_to_latex import escape_href, html_to_latex, html_to_latex_items
 import math
 import re
 
+# 工作经历板块的 Logo 文件名前缀。实习用默认的 'logo'，两者必须不同——
+# 同名会让两个板块下标相同的 Logo 互相覆盖（显示成错的公司）。
+# 下载端 company_logos.download_logos_to_dir 与渲染端共用本常量。
+WORK_EXPERIENCE_LOGO_PREFIX = 'work_logo'
+
 
 def _apply_px_font_size(
     latex_content: str,
@@ -50,12 +55,20 @@ def generate_section_summary(resume_data: Dict[str, Any], section_titles: Dict[s
         content.append("")
     return content
 
-def generate_section_internships(resume_data: Dict[str, Any], section_titles: Dict[str, str] = None) -> List[str]:
+def generate_section_internships(
+    resume_data: Dict[str, Any],
+    section_titles: Dict[str, str] = None,
+    logo_prefix: str = 'logo',
+) -> List[str]:
     """
     生成实习经历/工作经历 - 与 wy.tex 格式一致
     支持 Markdown 加粗（**text**），自动组合 company 和 position
     格式：{company} - {position}
     支持列表类型：none（无列表）、unordered（无序列表）、ordered（有序列表）
+
+    logo_prefix 决定 Logo 图片文件名（`{prefix}_{idx}.png`），必须与
+    company_logos.download_logos_to_dir 落盘时用的前缀一致。工作经历复用本
+    生成器但走独立前缀，否则两个板块同下标的 Logo 会互相覆盖。
     """
     content = []
     internships = resume_data.get('internships') or []
@@ -96,7 +109,7 @@ def generate_section_internships(resume_data: Dict[str, Any], section_titles: Di
             # 如果有公司 Logo，在公司名称前插入图片
             logo_key = it.get('logo')
             if logo_key:
-                logo_file = f"logos/logo_{idx}.png"
+                logo_file = f"logos/{logo_prefix}_{idx}.png"
                 # 优先使用单条经历的 logoSize，否则用全局设置
                 item_logo_px = it.get('logoSize') or logo_size_px
                 item_logo_pt = round(item_logo_px * 0.75, 1)
@@ -937,7 +950,9 @@ def generate_section_work_experience(resume_data: Dict[str, Any], section_titles
     titles = dict(section_titles or {})
     # internships 生成器按 internships → experience 顺序取标题，此处显式覆盖
     titles['internships'] = titles.get('workExperience') or '工作经历'
-    return generate_section_internships(proxy, titles)
+    return generate_section_internships(
+        proxy, titles, logo_prefix=WORK_EXPERIENCE_LOGO_PREFIX
+    )
 
 
 """

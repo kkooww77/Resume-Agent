@@ -393,9 +393,15 @@ def _download_url_to_path(url: str, local_path: Path, timeout: float = 15.0) -> 
         local_path.write_bytes(resp.read())
 
 
-def download_logos_to_dir(internships: list, target_dir: str) -> dict[int, str]:
+def download_logos_to_dir(
+    internships: list, target_dir: str, prefix: str = 'logo'
+) -> dict[int, str]:
     """
     将 internships 中用到的 Logo 写入目标目录：优先从 COS 下载，失败时回退本地复制
+
+    prefix 决定文件名（`{prefix}_{idx}.png`），必须与渲染端
+    latex_sections.generate_section_internships 的 logo_prefix 一致。
+    工作经历板块走 WORK_EXPERIENCE_LOGO_PREFIX，避免与实习同名互相覆盖。
 
     返回: { index: local_filename } 映射，如 { 0: 'logo_0.png', 2: 'logo_2.png' }
     """
@@ -410,7 +416,7 @@ def download_logos_to_dir(internships: list, target_dir: str) -> dict[int, str]:
             continue
 
         logos_dir.mkdir(parents=True, exist_ok=True)
-        local_filename = f'logo_{idx}.png'
+        local_filename = f'{prefix}_{idx}.png'
         local_path = logos_dir / local_filename
 
         cos_url = get_logo_cos_url(logo_key)

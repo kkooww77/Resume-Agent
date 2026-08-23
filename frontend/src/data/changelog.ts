@@ -15,6 +15,14 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.5.5',
+    date: '2026-08-23',
+    fixed: [
+      '修复「工作经历」里设置了公司 Logo 时，简历无法导出 PDF 的问题',
+      '「工作经历」的公司 Logo 现在能正常显示，不会和实习经历的 Logo 串位',
+    ],
+  },
+  {
     version: '3.5.4',
     date: '2026-08-21',
     added: [

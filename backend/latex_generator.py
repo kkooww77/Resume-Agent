@@ -18,7 +18,12 @@ from io import BytesIO
 from datetime import date
 
 from .latex_utils import escape_latex, normalize_resume_data, resolve_xelatex_executable, subprocess_env_with_xelatex_bin
-from .latex_sections import SECTION_GENERATORS, DEFAULT_SECTION_ORDER, generate_section_custom
+from .latex_sections import (
+    SECTION_GENERATORS,
+    DEFAULT_SECTION_ORDER,
+    WORK_EXPERIENCE_LOGO_PREFIX,
+    generate_section_custom,
+)
 from .company_logos import download_logos_to_dir
 from .school_logos import download_school_logos_to_dir, is_school_logo_latex_supported
 
@@ -246,22 +251,31 @@ def _sanitize_resume_for_available_assets(
     resume_data: Dict[str, Any],
     logo_map: Dict[int, str] | None = None,
     school_logo_map: Dict[int, str] | None = None,
+    work_logo_map: Dict[int, str] | None = None,
 ) -> Dict[str, Any]:
     """
     只保留当前已成功落到临时目录的 Logo 引用，避免 LaTeX includegraphics 指向不存在文件。
+
+    每个带 Logo 的板块都必须在这里出现——漏一个板块，那个板块缺图时就会留下
+    悬空的 includegraphics，xdvipdfmx 直接致命失败、整份 PDF 导不出。
     """
     sanitized = json.loads(json.dumps(resume_data))
     logo_map = logo_map or {}
     school_logo_map = school_logo_map or {}
+    work_logo_map = work_logo_map or {}
 
-    internships = sanitized.get("internships") or []
-    if isinstance(internships, list):
-        for idx, item in enumerate(internships):
+    def _strip_unavailable(items: Any, available: Dict[int, str]) -> None:
+        if not isinstance(items, list):
+            return
+        for idx, item in enumerate(items):
             if not isinstance(item, dict):
                 continue
-            if item.get("logo") and idx not in logo_map:
+            if item.get("logo") and idx not in available:
                 item.pop("logo", None)
                 item.pop("logoSize", None)
+
+    _strip_unavailable(sanitized.get("internships") or [], logo_map)
+    _strip_unavailable(sanitized.get("workExperience") or [], work_logo_map)
 
     education = sanitized.get("education") or []
     if isinstance(education, list):
@@ -530,11 +544,18 @@ def compile_latex_to_pdf(latex_content: str, template_dir: Path, resume_data: Di
         local_photo = None
         logo_map = {}
         school_logo_map = {}
+        work_logo_map = {}
         if resume_data:
             internships = resume_data.get('internships') or []
             if any(it.get('logo') for it in internships):
                 logo_map = download_logos_to_dir(internships, temp_dir)
                 print(f"[Logo] 下载完成，共 {len(logo_map)} 个 Logo")
+            work_experience = resume_data.get('workExperience') or []
+            if any(it.get('logo') for it in work_experience):
+                work_logo_map = download_logos_to_dir(
+                    work_experience, temp_dir, prefix=WORK_EXPERIENCE_LOGO_PREFIX
+                )
+                print(f"[Logo] 工作经历下载完成，共 {len(work_logo_map)} 个 Logo")
             education = resume_data.get('education') or []
             if any(ed.get('logo') for ed in education):
                 school_logo_map = download_school_logos_to_dir(education, temp_dir)
@@ -544,6 +565,7 @@ def compile_latex_to_pdf(latex_content: str, template_dir: Path, resume_data: Di
                 resume_data,
                 logo_map=logo_map,
                 school_logo_map=school_logo_map,
+                work_logo_map=work_logo_map,
             )
             if sanitized_for_assets != resume_data:
                 latex_content = json_to_latex(

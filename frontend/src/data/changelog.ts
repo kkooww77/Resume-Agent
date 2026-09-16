@@ -15,6 +15,14 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.6.0',
+    date: '2026-09-16',
+    fixed: [
+      '修复 AI 导入解析失败的问题，简历解析、图片识别、PDF 识别恢复正常',
+      '修复 AI 助手无法回复的问题',
+    ],
+  },
+  {
     version: '3.5.5',
     date: '2026-08-23',
     fixed: [

@@ -5,10 +5,11 @@ import PortalDropdown from "@/components/common/PortalDropdown";
 export const AGENT_MODELS = [
   // 2026-07-16 收敛:只保留 DeepSeek(qwen/claude 暂下线)。只剩一个模型时
   // 选择器组件自动隐藏(见下方 length<=1 分支),顶栏不再显示模型下拉。
-  { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash", hint: "快速 · 高性价比 · 默认推荐" },
+  // 2026-09-16 阿里云百炼欠费,改走 DeepSeek 官方,型号名随之变更。
+  { value: "deepseek-flash", label: "DeepSeek Flash", hint: "快速 · 高性价比 · 默认推荐" },
 ];
 
-export const DEFAULT_AGENT_MODEL = "deepseek-v4-flash";
+export const DEFAULT_AGENT_MODEL = "deepseek-flash";
 
 interface ModelSelectorProps {
   value: string;

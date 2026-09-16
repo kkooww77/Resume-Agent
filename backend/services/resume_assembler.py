@@ -51,30 +51,42 @@ except ImportError:
     )
 
 
-DEEPSEEK_MODEL = "deepseek-v4-flash"
-DEEPSEEK_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+# 2026-09-16 从阿里云百炼切到 DeepSeek 官方（百炼账户欠费，返回 400 Arrearage）。
+# 官方只提供 deepseek-flash 与 deepseek-v4-pro 两个模型，qwen 系列在这边不存在。
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "").strip() or "deepseek-flash"
+DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "").strip() or "https://api.deepseek.com"
 
-# Claude 走 RuoLi 中转（OpenAI 兼容），与 DashScope 通道独立。
+# deepseek-flash 默认开思考模式，会返回 reasoning_content 并拒绝 tool_choice=required。
+# 关它只认下面这个参数——DashScope 时代的 enable_thinking=false 在官方端被静默忽略。
+DEEPSEEK_NO_THINKING = {"thinking": {"type": "disabled"}}
+
+# Claude 走 RuoLi 中转（OpenAI 兼容），与 DeepSeek 通道独立。
 RUOLI_BASE_URL = os.getenv("RUOLI_BASE_URL", "https://ruoli.dev/v1").strip()
 
-# 结构化默认模型：qwen-plus-latest（实测比 deepseek-v4-flash 输出 token 少约一半、更快更稳，
-# 与 deepseek 同走 DashScope 兼容通道，仅换 model 名、不改 base_url / key）。
+# 结构化默认模型。原为 qwen-plus-latest（实测输出 token 少约一半、更快），
+# 但那是 DashScope 独有模型，切到 DeepSeek 官方后不可用，故回落到 deepseek-flash。
 # 可用环境变量 ASSEMBLER_MODEL 覆盖。
-DEFAULT_ASSEMBLER_MODEL = os.getenv("ASSEMBLER_MODEL", "").strip() or "qwen-plus-latest"
+DEFAULT_ASSEMBLER_MODEL = os.getenv("ASSEMBLER_MODEL", "").strip() or DEEPSEEK_MODEL
 
 
 def resolve_assembler_model(model: Optional[str]) -> str:
     """决定结构化用哪个模型。
-    - 显式传 deepseek-*（含 deepseek-chat/reasoner 归一到 v4-flash）：保留，向后兼容
-    - 显式传 qwen-* 等其它模型：放行
-    - 未传 / 空：用 DEFAULT_ASSEMBLER_MODEL（qwen-plus-latest）
+    - 传已下线的 deepseek 旧名（deepseek-chat / reasoner / v4-flash）：归一到当前官方模型，
+      向后兼容老前端与老会话里存下的模型名
+    - 传 qwen-*：DashScope 独有，切到 DeepSeek 官方后不存在，同样归一，
+      否则老数据会带着一个必然 404 的模型名打过去
+    - 其它显式模型（如 claude-*）：放行
+    - 未传 / 空：用 DEFAULT_ASSEMBLER_MODEL
     """
     name = (model or "").strip()
     if not name:
         return DEFAULT_ASSEMBLER_MODEL
-    if name in ("deepseek-chat", "deepseek-reasoner"):
-        return DEEPSEEK_MODEL
-    return name
+    # 别名表统一维护在 backend/simple.py，两条链路共用一份，避免各自漂移
+    try:
+        from backend.simple import normalize_model_name
+    except ImportError:
+        from simple import normalize_model_name
+    return normalize_model_name(name)
 
 _deepseek_client: Optional[OpenAI] = None
 _last_key: Optional[str] = None
@@ -83,10 +95,16 @@ _ruoli_client: Optional[OpenAI] = None
 _last_ruoli_key: Optional[str] = None
 
 
+def _thinking_off(model_name: Optional[str]) -> Optional[dict]:
+    """deepseek-* 关闭思考模式；其它通道（claude）不认这个参数，必须传 None。"""
+    name = (model_name or "").strip()
+    return DEEPSEEK_NO_THINKING if name.startswith("deepseek") else None
+
+
 def _get_client(model_name: Optional[str] = None) -> OpenAI:
     """按模型名选 LLM 通道：
     - claude-* → RuoLi 中转（RUOLI_API_KEY + RUOLI_BASE_URL）
-    - 其它    → DashScope（DASHSCOPE_API_KEY + DEEPSEEK_BASE_URL）
+    - 其它    → DeepSeek 官方（DEEPSEEK_API_KEY + DEEPSEEK_BASE_URL）
     main 启动时已 load_dotenv。
     """
     # ---- Claude 走中转 ----
@@ -105,14 +123,15 @@ def _get_client(model_name: Optional[str] = None) -> OpenAI:
             _last_ruoli_key = key
         return _ruoli_client
 
-    # ---- DashScope 通道（qwen / deepseek）----
+    # ---- DeepSeek 官方通道 ----
     global _deepseek_client, _last_key
-    key = os.getenv("DASHSCOPE_API_KEY", "").strip()
+    # 2026-09-16 起以 DEEPSEEK_API_KEY 为准；DASHSCOPE_API_KEY 仅作旧部署兜底。
+    key = (os.getenv("DEEPSEEK_API_KEY", "") or os.getenv("DASHSCOPE_API_KEY", "")).strip()
     if not key:
-        raise ValueError("DASHSCOPE_API_KEY 未配置")
+        raise ValueError("DEEPSEEK_API_KEY 未配置")
     if _deepseek_client is None or _last_key != key:
         # 显式 timeout + 关闭 SDK 默认指数退避重试：
-        # SDK 默认 timeout=600s + 重试 2 次(0.8→1.6→3.8s)，一次 DashScope 抖动会被放大到 10s+。
+        # SDK 默认 timeout=600s + 重试 2 次(0.8→1.6→3.8s)，一次上游抖动会被放大到 10s+。
         # 这里 60s 超时 + 不重试，失败快速抛出，交给上层 EASY/EXP 并发 + _serial 回退处理。
         _deepseek_client = OpenAI(
             api_key=key,
@@ -434,6 +453,7 @@ def assemble_resume_data(
         ],
         temperature=0.1,
         max_tokens=8000,
+        extra_body=_thinking_off(model_name),
     )
     content = response.choices[0].message.content
     if not content:
@@ -511,6 +531,7 @@ def _extract_sections(
             temperature=0.1,
             max_tokens=4000,
             response_format={"type": "json_object"},  # 约束解码，杜绝非法 JSON
+            extra_body=_thinking_off(model_name),
         )
         try:
             parsed = _parse_json(resp.choices[0].message.content or "")

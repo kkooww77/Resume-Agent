@@ -5,13 +5,9 @@
 
 """
 智谱 / 豆包 / DeepSeek API 配置（从环境变量读取）
-- ZHIPU_API_KEY
-- DOUBAO_API_KEY
-- DOUBAO_MODEL（默认 doubao-seed-1-6-lite-251015）
-- DOUBAO_BASE_URL（默认 https://ark.cn-beijing.volces.com/api/v3）
-- DASHSCOPE_API_KEY
-- DEEPSEEK_MODEL（默认 deepseek-v4-flash）
-- DEEPSEEK_BASE_URL（默认 https://dashscope.aliyuncs.com/compatible-mode/v1）
+- DEEPSEEK_API_KEY（旧部署兼容 DASHSCOPE_API_KEY）
+- DEEPSEEK_MODEL（默认 deepseek-flash）
+- DEEPSEEK_BASE_URL（默认 https://api.deepseek.com）
 """
 import os
 """
@@ -30,39 +26,40 @@ try:
 except Exception:
     pass
 
-ZHIPU_API_KEY = os.getenv("ZHIPU_API_KEY", "")
-"""
-默认使用 GLM-4.5V，可通过环境变量 ZHIPU_MODEL 修改
-模型选择：
-- glm-4-flash: 最快，适合简单任务
-- glm-4-air: 平衡速度和质量
-- glm-4.5v: 综合能力最强（默认）
-"""
-ZHIPU_MODEL = os.getenv("ZHIPU_MODEL", "glm-4.5v")
 
 """豆包配置"""
-DOUBAO_API_KEY = os.getenv("DOUBAO_API_KEY", "")
-DOUBAO_MODEL = os.getenv("DOUBAO_MODEL", "doubao-seed-1-6-lite-251015")
-DOUBAO_BASE_URL = os.getenv("DOUBAO_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
 
 """DeepSeek 配置"""
-DEEPSEEK_API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
-DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash")
-DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+# 2026-09-16 从阿里云百炼切到 DeepSeek 官方（百炼欠费）。
+# key 以 DEEPSEEK_API_KEY 为准，DASHSCOPE_API_KEY 仅作旧部署兜底。
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "") or os.getenv("DASHSCOPE_API_KEY", "")
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
+DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+
+# 已下线型号 → 当前在售型号。老前端 bundle 会缓存在用户浏览器里继续发旧模型名，
+# 原样透传给上游必然 404/无可用渠道，所以在最底层统一归一，各调用方不必各自处理。
+# 注意 claude-sonnet-4-6 曾是 PDF 导入的默认选中项，缓存用户命中率不低。
+LEGACY_MODEL_ALIASES = {
+    "deepseek-v4-flash": DEEPSEEK_MODEL,
+    "deepseek-chat": DEEPSEEK_MODEL,
+    "deepseek-reasoner": DEEPSEEK_MODEL,
+    "claude-sonnet-4-6": DEEPSEEK_MODEL,
+    "qwen-max": DEEPSEEK_MODEL,
+    "qwen-plus": DEEPSEEK_MODEL,
+    "qwen-plus-latest": DEEPSEEK_MODEL,
+    "qwen-turbo": DEEPSEEK_MODEL,
+}
 
 
-"""
-导入智谱 SDK (使用官方 zhipuai)
-"""
-ZhipuAI = None
+def normalize_model_name(model: str | None) -> str:
+    """把已下线型号换成当前在售型号；未知名字原样返回。"""
+    name = (model or "").strip()
+    if not name:
+        return DEEPSEEK_MODEL
+    return LEGACY_MODEL_ALIASES.get(name, name)
+
+
 """全局客户端实例，避免重复创建"""
-_zhipu_client = None
-_last_zhipu_key = None  # 记录上次使用的 API Key
-try:
-    from zhipuai import ZhipuAI
-except ImportError:
-    print("zhipuai 未安装，请运行: uv pip install zhipuai")
-    ZhipuAI = None
 
 
 """
@@ -166,235 +163,27 @@ def warmup_connection():
     """降级方案"""
     try:
         session = get_http_session()
-        session.head(DOUBAO_BASE_URL.replace('/v3', ''), timeout=2)
+        session.head(DEEPSEEK_BASE_URL, timeout=2)
         _connection_warmed = True
     except:
         pass
-
-"""减少重试次数和延迟，避免重试导致整体延迟"""
-@retry_with_backoff(max_retries=1, initial_delay=0.05)
-def call_zhipu_api(prompt: str, model: str = None) -> dict:
-    """
-    调用智谱 API（使用官方 zhipuai SDK）
-    
-    参数:
-        prompt: 用户输入的提示词
-        model: 使用的模型名称，默认为 ZHIPU_MODEL
-    
-    返回:
-        包含 content 和 usage 的字典:
-        {
-            "content": str,  # API 返回的响应内容
-            "usage": {      # Token 使用信息
-                "prompt_tokens": int,
-                "completion_tokens": int,
-                "total_tokens": int
-            }
-        }
-    """
-    global _zhipu_client
-    
-    if ZhipuAI is None:
-        return {
-            "content": "智谱客户端未初始化",
-            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
-        }
-    
-    if model is None:
-        model = ZHIPU_MODEL
-    
-    """复用全局客户端实例，但如果 API Key 变化则重新创建"""
-    global _zhipu_client, _last_zhipu_key
-    
-    # 如果 API Key 变化或客户端未初始化，重新创建客户端
-    if _zhipu_client is None or _last_zhipu_key != ZHIPU_API_KEY:
-        _zhipu_client = ZhipuAI(api_key=ZHIPU_API_KEY)
-        _last_zhipu_key = ZHIPU_API_KEY
-    
-    client = _zhipu_client
-    
-    """调用 API（极限优化参数）"""
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.01,  # 最低温度
-            max_tokens=800,    # 进一步减少
-            timeout=15,        # 缩短超时时间，快速失败，避免慢请求拖累整体
-        )
-    except Exception as e:
-        # 如果 API 调用失败，返回错误信息
-        error_msg = str(e)
-        # 尝试提取更详细的错误信息
-        if hasattr(e, 'response') and hasattr(e.response, 'text'):
-            try:
-                import json
-                error_data = json.loads(e.response.text)
-                if isinstance(error_data, dict) and 'error' in error_data:
-                    error_msg = error_data['error'].get('message', error_msg)
-            except:
-                pass
-        raise Exception(f"智谱 API 调用失败: {error_msg}")
-    
-    """提取返回内容"""
-    result = response.choices[0].message.content
-    
-    """清理智谱返回的特殊标签"""
-    import re
-    result = re.sub(r'<\|begin_of_box\|>', '', result)
-    result = re.sub(r'<\|end_of_box\|>', '', result)
-    result = result.strip()
-    
-    """提取 Token 使用信息"""
-    usage = {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0
-    }
-    if hasattr(response, 'usage') and response.usage:
-        usage = {
-            "prompt_tokens": getattr(response.usage, 'prompt_tokens', 0),
-            "completion_tokens": getattr(response.usage, 'completion_tokens', 0),
-            "total_tokens": getattr(response.usage, 'total_tokens', 0)
-        }
-    
-    return {
-        "content": result,
-        "usage": usage
-    }
 
 
 """简化的系统提示词，让模型更快响应"""
 FAST_SYSTEM_PROMPT = """你是一个简历解析助手。直接输出 JSON，不要多余解释。"""
 
-@retry_with_backoff(max_retries=1, initial_delay=0.1)
-def call_doubao_api(prompt: str, model: str = None, fast_mode: bool = True) -> str:
-    """
-    调用豆包 API（火山引擎）- 极限优化版
-    
-    参数:
-        prompt: 用户输入的提示词
-        model: 使用的模型名称，默认为 DOUBAO_MODEL
-        fast_mode: 是否使用快速模式（低思考强度）
-    
-    返回:
-        API 返回的响应内容
-    """
-    if model is None:
-        model = DOUBAO_MODEL
-    
-    api_url = f"{DOUBAO_BASE_URL}/chat/completions"
-    
-    """极限优化参数"""
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": FAST_SYSTEM_PROMPT} if fast_mode else None,
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.1 if fast_mode else 0.7,  # 极低温度
-        "max_tokens": 1000,   # 进一步减少
-        "top_p": 0.7,         # 更限制的采样
-        "frequency_penalty": 0,
-        "presence_penalty": 0,
-    }
-    
-    """移除 None 消息"""
-    payload["messages"] = [m for m in payload["messages"] if m]
-    
-    """添加最低思考强度参数（大幅提升速度 1.5~5 倍）"""
-    payload["reasoning_effort"] = "minimal"
-    
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {DOUBAO_API_KEY}"
-    }
-    
-    """使用复用的 HTTP Session"""
-    session = get_http_session()
-    response = session.post(
-        api_url,
-        json=payload,
-        headers=headers,
-        timeout=30
-    )
-    """减少超时"""
-    
-    if response.status_code == 200:
-        result = response.json()
-        return result["choices"][0]["message"]["content"]
-    else:
-        raise Exception(f"豆包 API 调用失败: {response.status_code} - {response.text}")
-
-
-def call_doubao_api_stream(prompt: str, model: str = None, fast_mode: bool = True):
-    """
-    流式调用豆包 API（火山引擎）- 优化版
-    
-    参数:
-        prompt: 用户输入的提示词
-        model: 使用的模型名称，默认为 DOUBAO_MODEL
-        fast_mode: 是否使用快速模式（低思考强度）
-    
-    生成器返回:
-        每次返回一个文本片段
-    """
-    if model is None:
-        model = DOUBAO_MODEL
-    
-    api_url = f"{DOUBAO_BASE_URL}/chat/completions"
-    
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.3 if fast_mode else 0.7,
-        "max_tokens": 2000,
-        "top_p": 0.8,
-        "stream": True  # 启用流式输出
-    }
-    
-    # 添加最低思考强度参数（大幅提升速度 1.5~5 倍）
-    payload["reasoning_effort"] = "minimal"
-    
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {DOUBAO_API_KEY}"
-    }
-    
-    # 使用复用的 HTTP Session
-    session = get_http_session()
-    response = session.post(
-        api_url,
-        json=payload,
-        headers=headers,
-        timeout=90,
-        stream=True  # 启用流式响应
-    )
-    
-    if response.status_code != 200:
-        raise Exception(f"豆包 API 调用失败: {response.status_code} - {response.text}")
-    
-    # 解析 SSE 流
-    for line in response.iter_lines():
-        if line:
-            line = line.decode('utf-8')
-            if line.startswith('data: '):
-                data = line[6:]  # 移除 'data: ' 前缀
-                if data == '[DONE]':
-                    break
-                try:
-                    import json
-                    chunk = json.loads(data)
-                    if 'choices' in chunk and len(chunk['choices']) > 0:
-                        delta = chunk['choices'][0].get('delta', {})
-                        content = delta.get('content', '')
-                        if content:
-                            yield content
-                except json.JSONDecodeError:
-                    continue
-
 
 @retry_with_backoff(max_retries=1, initial_delay=0.1)
+
+def _deepseek_thinking_off(model: str) -> dict:
+    """deepseek-* 关闭思考模式的请求字段。
+
+    deepseek-flash 默认开思考，会返回 reasoning_content、拖慢解析并多烧 token。
+    只认 thinking.type=disabled —— DashScope 时代的 enable_thinking=false 在官方端被静默忽略。
+    """
+    return {"thinking": {"type": "disabled"}} if (model or "").startswith("deepseek") else {}
+
+
 def call_deepseek_api(prompt: str, model: str = None) -> str:
     """
     调用 DeepSeek API
@@ -408,7 +197,7 @@ def call_deepseek_api(prompt: str, model: str = None) -> str:
     """
     # 检查 API Key 是否配置
     if not DEEPSEEK_API_KEY:
-        raise Exception("DASHSCOPE_API_KEY 未配置。请在 Railway 环境变量或本地 .env 文件中设置 DASHSCOPE_API_KEY")
+        raise Exception("DEEPSEEK_API_KEY 未配置。请在本地 .env 或系统环境中设置 DEEPSEEK_API_KEY")
     
     if model is None:
         model = DEEPSEEK_MODEL
@@ -427,6 +216,7 @@ def call_deepseek_api(prompt: str, model: str = None) -> str:
         "top_p": 0.9,
         "frequency_penalty": 0,
         "presence_penalty": 0,
+        **_deepseek_thinking_off(model),
     }
 
     headers = {
@@ -529,7 +319,8 @@ def call_deepseek_api_stream(prompt: str, model: str = None):
         "temperature": 0.3,
         "max_tokens": 4000,
         "top_p": 0.9,
-        "stream": True  # 启用流式输出
+        "stream": True,  # 启用流式输出
+        **_deepseek_thinking_off(model),
     }
 
     headers = {
@@ -569,45 +360,4 @@ def call_deepseek_api_stream(prompt: str, model: str = None):
                 except json.JSONDecodeError:
                     continue
 
-
-def main():
-    """
-    主函数：演示如何使用三个 API
-    """
-    """测试智谱 API"""
-    print("=" * 50)
-    print("测试智谱 API")
-    print("=" * 50)
-    try:
-        zhipu_result = call_zhipu_api("请用一句话介绍人工智能")
-        print(f"智谱返回: {zhipu_result}")
-    except Exception as e:
-        print(f"智谱 API 调用失败: {e}")
-    print()
-
-    """测试豆包 API"""
-    print("=" * 50)
-    print("测试豆包 API")
-    print("=" * 50)
-    try:
-        doubao_result = call_doubao_api("请用一句话介绍人工智能")
-        print(f"豆包返回: {doubao_result}")
-    except Exception as e:
-        print(f"豆包 API 调用失败: {e}")
-    print()
-
-    """测试 DeepSeek API"""
-    print("=" * 50)
-    print("测试 DeepSeek API")
-    print("=" * 50)
-    try:
-        deepseek_result = call_deepseek_api("请用一句话介绍人工智能")
-        print(f"DeepSeek 返回: {deepseek_result}")
-    except Exception as e:
-        print(f"DeepSeek API 调用失败: {e}")
-    print()
-
-
-if __name__ == "__main__":
-    main()
 

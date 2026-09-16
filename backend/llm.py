@@ -38,14 +38,14 @@ except ImportError:
 # 全局 AI 配置
 DEFAULT_AI_PROVIDER = "deepseek"
 DEFAULT_AI_MODEL = {
-    "deepseek": "deepseek-v4-flash"
+    "deepseek": "deepseek-flash"
 }
 
-# 支持的模型列表
+# 支持的模型列表（2026-09-16 起为 DeepSeek 官方在售型号，
+# 官方 /models 只返回 deepseek-flash 与 deepseek-v4-pro）
 SUPPORTED_MODELS = {
-    "deepseek-v4-flash": "DeepSeek V4 Flash (快速)",
-    "deepseek-v3.2": "DeepSeek V3.2",
-    "deepseek-reasoner": "DeepSeek Reasoner (深度推理)"
+    "deepseek-flash": "DeepSeek Flash (快速)",
+    "deepseek-v4-pro": "DeepSeek V4 Pro"
 }
 
 
@@ -65,53 +65,22 @@ def call_llm(provider: str, prompt: str, return_usage: bool = False, model: str 
         如果 return_usage=True: 返回字典 {"content": str, "usage": dict}
     """
     if provider == "deepseek":
-        key = os.getenv("DASHSCOPE_API_KEY") or getattr(simple, "DEEPSEEK_API_KEY", "")
+        key = (os.getenv("DEEPSEEK_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
+               or getattr(simple, "DEEPSEEK_API_KEY", ""))
         if not key:
             raise HTTPException(
                 status_code=400,
-                detail="缺少 DASHSCOPE_API_KEY，请在项目根目录 .env 或系统环境中配置 DASHSCOPE_API_KEY"
+                detail="缺少 DEEPSEEK_API_KEY，请在项目根目录 .env 或系统环境中配置 DEEPSEEK_API_KEY"
             )
         simple.DEEPSEEK_API_KEY = key
         # 如果指定了模型，使用指定的模型，否则使用环境变量或默认值
         if model:
-            simple.DEEPSEEK_MODEL = model
+            # 归一已下线型号（老前端缓存会发旧名），避免原样透传上游 404
+            simple.DEEPSEEK_MODEL = simple.normalize_model_name(model)
         else:
             simple.DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", simple.DEEPSEEK_MODEL)
         simple.DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", simple.DEEPSEEK_BASE_URL)
         return simple.call_deepseek_api(prompt, model=simple.DEEPSEEK_MODEL)
-
-    elif provider == "doubao":
-        key = os.getenv("DOUBAO_API_KEY") or getattr(simple, "DOUBAO_API_KEY", "")
-        if not key:
-            raise HTTPException(
-                status_code=400,
-                detail="缺少 DOUBAO_API_KEY，请在项目根目录 .env 或系统环境中配置 DOUBAO_API_KEY"
-            )
-        simple.DOUBAO_API_KEY = key
-        simple.DOUBAO_MODEL = os.getenv("DOUBAO_MODEL", simple.DOUBAO_MODEL)
-        simple.DOUBAO_BASE_URL = os.getenv("DOUBAO_BASE_URL", simple.DOUBAO_BASE_URL)
-        return simple.call_doubao_api(prompt)
-
-    elif provider == "zhipu":
-        # 保留兼容性
-        key = getattr(simple, "ZHIPU_API_KEY", "") or os.getenv("ZHIPU_API_KEY", "")
-        if not key:
-            raise HTTPException(
-                status_code=400,
-                detail="缺少 ZHIPU_API_KEY，请在项目根目录 .env 或系统环境中配置 ZHIPU_API_KEY"
-            )
-        old_key = getattr(simple, "ZHIPU_API_KEY", "")
-        simple.ZHIPU_API_KEY = key
-        if old_key != key:
-            simple._zhipu_client = None
-            simple._last_zhipu_key = None
-        result = simple.call_zhipu_api(prompt)
-        if return_usage:
-            return result
-        else:
-            if isinstance(result, dict):
-                return result.get("content", "")
-            return result
 
     else:
         raise ValueError(f"不支持的 provider: {provider}")
@@ -121,26 +90,13 @@ def call_llm_stream(provider: str, prompt: str):
     """
     流式调用 LLM，返回生成器
     """
-    if provider == "doubao":
-        key = os.getenv("DOUBAO_API_KEY") or getattr(simple, "DOUBAO_API_KEY", "")
+    if provider == "deepseek":
+        key = (os.getenv("DEEPSEEK_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
+               or getattr(simple, "DEEPSEEK_API_KEY", ""))
         if not key:
             raise HTTPException(
                 status_code=400,
-                detail="缺少 DOUBAO_API_KEY"
-            )
-        simple.DOUBAO_API_KEY = key
-        simple.DOUBAO_MODEL = os.getenv("DOUBAO_MODEL", simple.DOUBAO_MODEL)
-        simple.DOUBAO_BASE_URL = os.getenv("DOUBAO_BASE_URL", simple.DOUBAO_BASE_URL)
-
-        for chunk in simple.call_doubao_api_stream(prompt):
-            yield chunk
-
-    elif provider == "deepseek":
-        key = os.getenv("DASHSCOPE_API_KEY") or getattr(simple, "DEEPSEEK_API_KEY", "")
-        if not key:
-            raise HTTPException(
-                status_code=400,
-                detail="缺少 DASHSCOPE_API_KEY"
+                detail="缺少 DEEPSEEK_API_KEY"
             )
         simple.DEEPSEEK_API_KEY = key
         simple.DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", simple.DEEPSEEK_MODEL)
@@ -148,10 +104,6 @@ def call_llm_stream(provider: str, prompt: str):
 
         for chunk in simple.call_deepseek_api_stream(prompt):
             yield chunk
-
-    elif provider == "zhipu":
-        result = call_llm(provider, prompt)
-        yield result
 
     else:
         raise ValueError(f"不支持的 provider: {provider}")

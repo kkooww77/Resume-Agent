@@ -29,17 +29,15 @@ const DEEPSEEK_LOGO_URL =
   "https://upload.wikimedia.org/wikipedia/commons/e/ec/DeepSeek_logo.svg";
 
 // 可用的 AI 模型列表
+// 2026-09-16：阿里云百炼欠费，全线切到 DeepSeek 官方。
+// 官方在售只有 deepseek-flash / deepseek-v4-pro；原「Claude Sonnet 4.6（仅 PDF）」
+// 所依赖的中转站已下架该模型，一并移除。
 const AI_MODELS = [
   {
-    id: "deepseek-v4-flash",
-    name: "DeepSeek V4 Flash",
+    id: "deepseek-flash",
+    name: "DeepSeek Flash",
     description: "智能解析简历内容（快速）",
     logoUrl: DEEPSEEK_LOGO_URL,
-  },
-  {
-    id: "claude-sonnet-4-6",
-    name: "Claude Sonnet 4.6",
-    description: "智能解析简历内容（仅 PDF）",
   },
 ];
 
@@ -107,7 +105,7 @@ export function AIImportModal({
   const [parsedData, setParsedData] = useState<any>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [finalTime, setFinalTime] = useState<number | null>(null);
-  const [selectedModel, setSelectedModel] = useState("claude-sonnet-4-6");
+  const [selectedModel, setSelectedModel] = useState("deepseek-flash");
   const [selectedVisionModel, setSelectedVisionModel] = useState("glm-ocr");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -536,9 +534,7 @@ export function AIImportModal({
                   {/* 下拉菜单 */}
                   {showModelDropdown && (
                     <div className="absolute z-10 w-full mt-2 rounded-none fresh:rounded-lg bg-white border-2 border-black fresh:border-slate-200 shadow-[4px_4px_0px_0px_#000000] fresh:shadow-lg overflow-hidden">
-                      {AI_MODELS
-                        .filter((m) => importMode === "pdf" || m.id !== "claude-sonnet-4-6")
-                        .map((model) => (
+                      {AI_MODELS.map((model) => (
                         <button
                           key={model.id}
                           type="button"
@@ -624,9 +620,6 @@ export function AIImportModal({
                     <button
                       onClick={() => {
                         setImportMode("image");
-                        if (selectedModel === "claude-sonnet-4-6") {
-                          setSelectedModel("deepseek-v4-flash");
-                        }
                       }}
                       className={cn(
                         "relative flex-1 flex items-center justify-center gap-2 py-2 text-sm font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal font-bold rounded-none fresh:rounded-md border border-black fresh:border-slate-200 transition-all",
@@ -644,10 +637,6 @@ export function AIImportModal({
                     <button
                       onClick={() => {
                         setImportMode("text");
-                        // claude 仅支持 PDF 导入，切到文本模式时回退默认模型
-                        if (selectedModel === "claude-sonnet-4-6") {
-                          setSelectedModel("deepseek-v4-flash");
-                        }
                       }}
                       className={cn(
                         "flex-1 flex items-center justify-center gap-2 py-2 text-sm font-mono fresh:font-sans uppercase fresh:normal-case tracking-wide fresh:tracking-normal font-bold rounded-none fresh:rounded-md border border-black fresh:border-slate-200 transition-all",

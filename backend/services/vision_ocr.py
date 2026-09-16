@@ -12,8 +12,10 @@ import os
 import httpx
 
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
+# 2026-09-16 解耦：原先复用 DEEPSEEK_BASE_URL，而文本链路已切到 DeepSeek 官方，
+# 再共用会把 qwen-vl 指到一个没有该模型的域名上。这里只认自己的变量。
 DASHSCOPE_BASE_URL = os.getenv(
-    "DEEPSEEK_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    "DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"
 )
 
 VISION_OCR_PROMPT = (

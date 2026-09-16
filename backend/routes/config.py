@@ -213,20 +213,6 @@ async def save_keys(body: SaveKeysRequest, _current_user=Depends(require_admin_o
         if load_dotenv:
             load_dotenv(dotenv_path=str(env_path), override=True)
 
-        # 重置智谱客户端实例，强制使用新的 API Key
-        if body.zhipu_key:
-            try:
-                try:
-                    from backend import simple
-                except ImportError:
-                    import simple
-                simple._zhipu_client = None
-                simple._last_zhipu_key = None
-                # 更新 simple 模块中的 API Key
-                simple.ZHIPU_API_KEY = body.zhipu_key
-            except Exception as e:
-                print(f"[警告] 重置智谱客户端失败: {e}")
-
         # 更新 DeepSeek API Key
         if body.deepseek_key:
             try:

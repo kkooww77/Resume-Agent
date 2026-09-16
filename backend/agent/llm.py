@@ -240,7 +240,7 @@ class LLM:
             self.model = llm_config.model
             self.max_tokens = llm_config.max_tokens
             # 供应商特有请求参数(如 DashScope enable_thinking=false: 推理模型
-            # 关闭思维链才支持 tool_choice=required),经 openai SDK extra_body 透传
+            # 关闭思考模式才支持 tool_choice=required)，经 openai SDK extra_body 透传
             self.extra_body = getattr(llm_config, "extra_body", None) or None
             self.temperature = llm_config.temperature
             self.api_type = llm_config.api_type
@@ -301,8 +301,9 @@ class LLM:
         - deepseek-* / qwen-* → DashScope
         - claude-* → RuoLi 中转
 
-        extra_body 随模型切换（如 deepseek-v4-flash 需 enable_thinking=false
+        extra_body 随模型切换（如 deepseek-flash 需 thinking.type=disabled
         才支持 tool_choice=required；其它模型不带该参数，避免误传 400）。
+        注意：DashScope 时代的 enable_thinking=false 在 DeepSeek 官方端被静默忽略。
 
         ask / ask_tool / ask_tool_stream 每次调用读 self.model 和 self.client，
         所以切换后下一次调用即时生效。

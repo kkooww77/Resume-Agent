@@ -245,23 +245,13 @@ async def startup_event():
     
     try:
         simple = import_module_candidates(["backend.simple", "simple"])
-        # 从环境变量同步 API Key 到 simple 模块
-        zhipu_key = os.getenv("ZHIPU_API_KEY", "")
-        if zhipu_key:
-            simple.ZHIPU_API_KEY = zhipu_key
-            simple._zhipu_client = None  # 重置客户端，使用新的 API Key
-            simple._last_zhipu_key = None
-            logger.info("[配置] 已从环境变量加载 ZHIPU_API_KEY")
-        
-        doubao_key = os.getenv("DOUBAO_API_KEY", "")
-        if doubao_key:
-            simple.DOUBAO_API_KEY = doubao_key
-            logger.info("[配置] 已从环境变量加载 DOUBAO_API_KEY")
-        
-        deepseek_key = os.getenv("DASHSCOPE_API_KEY", "")
+        # 从环境变量同步 API Key 到 simple 模块。
+        # 2026-09-16 起文本链路只剩 DeepSeek；智谱仅用于 OCR，它在
+        # services/zhipu_layout.py 自己读 ZHIPU_API_KEY，不经过这里。
+        deepseek_key = os.getenv("DEEPSEEK_API_KEY", "") or os.getenv("DASHSCOPE_API_KEY", "")
         if deepseek_key:
             simple.DEEPSEEK_API_KEY = deepseek_key
-            logger.info("[配置] 已从环境变量加载 DASHSCOPE_API_KEY")
+            logger.info("[配置] 已从环境变量加载 DEEPSEEK_API_KEY")
         
         simple.warmup_connection()
         logger.info("[启动优化] HTTP 连接已预热")

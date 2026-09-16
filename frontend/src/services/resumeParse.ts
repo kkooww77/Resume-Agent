@@ -4,7 +4,7 @@
 export async function parseResumeText(
   apiBaseUrl: string,
   text: string,
-  model = "deepseek-v4-flash",
+  model = "deepseek-flash",
 ): Promise<Record<string, unknown>> {
   const trimmed = text.trim();
   if (!trimmed) {

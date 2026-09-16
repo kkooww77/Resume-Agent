@@ -45,23 +45,36 @@ storage = get_conversation_storage()
 conversation_manager = ConversationManager(storage=storage)
 
 # 允许前端按请求切换的 agent 模型白名单
-_ALLOWED_AGENT_MODELS = {"deepseek-v4-flash", "qwen-max", "claude-sonnet-4-6"}
+# 2026-09-16：阿里云百炼欠费(400 Arrearage)，全线迁到 DeepSeek 官方。
+# 旧名保留在白名单里只为兼容老会话存下的 model 值，路由表里统一指向新通道。
+_ALLOWED_AGENT_MODELS = {
+    "deepseek-flash",
+    "deepseek-v4-pro",
+    # 下面几个是已下线型号，留在白名单只为让老会话能进到归一逻辑，
+    # 真正发给上游的名字由 _MODEL_ALIASES 换掉
+    "deepseek-v4-flash",
+    "qwen-max",
+    "claude-sonnet-4-6",
+}
 
 # 模型 → LLM 通道路由表（base_url, api_key 环境变量名, extra_body）
-# extra_body 随模型走：deepseek-v4-flash 是推理模型，须 enable_thinking=false
-# 才支持 tool_choice=required（诊断/建议引擎依赖）；其它模型不带该参数
+# extra_body 随模型走：deepseek-flash 默认开思考模式，会拒绝 tool_choice=required
+# （诊断/建议引擎依赖它），必须显式关掉。
+# ⚠️ 关思考只认 thinking.type=disabled；DashScope 时代的 enable_thinking=false
+# 在 DeepSeek 官方端被静默忽略，照抄会让 tool_choice 继续报错。
+_DEEPSEEK_OFFICIAL = "https://api.deepseek.com"
+_NO_THINKING = {"thinking": {"type": "disabled"}}
 _MODEL_CHANNELS = {
-    "deepseek-v4-flash": (
-        "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "DASHSCOPE_API_KEY",
-        {"enable_thinking": False},
-    ),
-    "qwen-max": (
-        "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "DASHSCOPE_API_KEY",
-        None,
-    ),
-    "claude-sonnet-4-6": ("https://ruoli.dev/v1", "RUOLI_API_KEY", None),
+    "deepseek-flash": (_DEEPSEEK_OFFICIAL, "DEEPSEEK_API_KEY", _NO_THINKING),
+    "deepseek-v4-pro": (_DEEPSEEK_OFFICIAL, "DEEPSEEK_API_KEY", _NO_THINKING),
+}
+
+# 已下线型号 → 当前型号。老会话里存着旧 model 名，原样发给上游会 404，
+# 必须在用它之前归一（只改通道不改名是不够的）。
+_MODEL_ALIASES = {
+    "deepseek-v4-flash": "deepseek-flash",
+    "qwen-max": "deepseek-flash",
+    "claude-sonnet-4-6": "deepseek-flash",
 }
 
 # In-memory session TTL — evict idle agent sessions to cap memory growth
@@ -289,8 +302,10 @@ async def _stream_event_generator(
         logger.info(f"[SSE Generator] Session created/retrieved successfully")
 
         # 按请求覆盖 LLM 模型（白名单防注入）；按模型动态切通道(base_url/api_key/client)
-        # qwen 走 DashScope，claude 走 RuoLi 中转，ask 方法每次读 self.model + self.client 即时生效
+        # ask 方法每次读 self.model + self.client 即时生效
         if model and model in _ALLOWED_AGENT_MODELS and getattr(agent, "llm", None) is not None:
+            # 先把已下线型号换成在售型号，再比对/切换——否则旧名会原样发给上游 404
+            model = _MODEL_ALIASES.get(model, model)
             if agent.llm.model != model:
                 channel = _MODEL_CHANNELS.get(model)
                 if channel:

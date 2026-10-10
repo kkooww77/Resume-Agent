@@ -19,6 +19,7 @@ import { fetchPdfDownloadQuota, recordPdfDownload, renderPDF } from '@/services/
 import { convertToBackendFormat } from '@/pages/Workspace/v2/utils/convertToBackend'
 import { initialResumeData } from '@/pages/Workspace/v2/constants'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 
 // 简单的 UUID 生成
 const generateUUID = () => {
@@ -34,11 +35,18 @@ type DashboardPageRequest = Readonly<{
 }>
 
 export const useDashboardLogic = ({ offset, limit }: DashboardPageRequest) => {
+  const { loading: authLoading } = useAuth()
   const [resumes, setResumes] = useState<SavedResumeSummary[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
   const requestIdRef = useRef(0)
+  /**
+   * 是否已经完成过一次加载（成功或失败）。
+   * 用 ref 而不是 hasLoaded state：loadResumes 的依赖必须保持 [offset, limit]，
+   * 否则把 hasLoaded 放进依赖会让它每次加载后换新身份、把下面的 effect 反复重跑。
+   */
+  const hasLoadedRef = useRef(false)
   const navigate = useNavigate()
 
   /** 是否处于多选模式 */
@@ -49,18 +57,27 @@ export const useDashboardLogic = ({ offset, limit }: DashboardPageRequest) => {
 
   const loadResumes = useCallback(async () => {
     const requestId = ++requestIdRef.current
-    setIsLoading(true)
+    // 只有"还没完成过首次加载"时才切骨架屏。
+    // 后台刷新（窗口重新获得焦点 / storage 事件 / 增删改后回刷）若也切骨架，会把已经
+    // 渲染好的整屏卡片替换成占位块；在跨区域链路上这段时间正好等于一次网络往返，
+    // 用户看到的就是"列表先出来、点一下又闪没了"。
+    if (!hasLoadedRef.current) setIsLoading(true)
     try {
       const page = await getResumeSummaryPage(offset, limit)
       if (requestId !== requestIdRef.current) return
       setResumes(page.items)
       setTotalCount(page.total)
+      hasLoadedRef.current = true
       setHasLoaded(true)
     } catch (error) {
       if (requestId !== requestIdRef.current) return
       console.error('[ResumeDashboard] 加载分页摘要失败:', error)
-      setResumes([])
-      setTotalCount(0)
+      // 只有首次加载失败才置空；后台刷新失败保留现有列表，避免"数据突然消失"。
+      if (!hasLoadedRef.current) {
+        setResumes([])
+        setTotalCount(0)
+      }
+      hasLoadedRef.current = true
       setHasLoaded(true)
     } finally {
       if (requestId === requestIdRef.current) setIsLoading(false)
@@ -68,6 +85,12 @@ export const useDashboardLogic = ({ offset, limit }: DashboardPageRequest) => {
   }, [offset, limit])
 
   useEffect(() => {
+    // 必须等 BetterAuth 会话确认后再加载。resumeStorage 在身份为空时会按匿名用户走
+    // 本地分支，拿到的是错的（或空的）列表；而身份事后变更不会自动触发重载，
+    // 于是"正确数据"只能靠偶然的 focus / storage 事件才出现。
+    // 侧边栏历史会话（RecentSessions）本来就是这么等的。
+    if (authLoading) return
+
     setResumes([])
     setIsLoading(true)
     ;(async () => {
@@ -81,7 +104,7 @@ export const useDashboardLogic = ({ offset, limit }: DashboardPageRequest) => {
       }
     }
     
-    // 监听页面获得焦点时刷新
+    // 监听页面获得焦点时刷新（现在是静默刷新，不会再闪骨架）
     const handleFocus = () => {
       loadResumes()
     }
@@ -93,7 +116,7 @@ export const useDashboardLogic = ({ offset, limit }: DashboardPageRequest) => {
       window.removeEventListener('storage', handleStorage)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [loadResumes])
+  }, [loadResumes, authLoading])
 
   useEffect(() => {
     setSelectedIds(new Set())

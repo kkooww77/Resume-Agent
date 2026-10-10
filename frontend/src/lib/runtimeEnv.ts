@@ -53,16 +53,28 @@ export function setRuntimeEnv(env: RuntimeEnv): void {
   localStorage.setItem(ENV_STORAGE_KEY, env)
 }
 
-export function getApiBaseUrl(env: RuntimeEnv = getRuntimeEnv()): string {
-  const authProxyBase = getAuthWebApiProxyBaseUrl()
-  if (authProxyBase) return authProxyBase
-
+/**
+ * 业务主机直连基址：**刻意不优先走 auth-web 代理**。
+ *
+ * 只有不需要 BetterAuth cookie 的接口才应该用它（典型是 PDF 渲染预览：
+ * 后端用 get_current_user_optional，匿名即可渲染）。走代理意味着请求要先绕到
+ * auth-web 所在区域、再跨境回源业务主机，这一段固定开销常常数倍于接口本身。
+ * 需要登录态的接口（额度查询/记账、admin 端点等）必须继续用 getApiBaseUrl()。
+ */
+export function getDirectApiBaseUrl(env: RuntimeEnv = getRuntimeEnv()): string {
   const baseMap = envBaseMap()
   // 本地开发时：
   // - local 走同源代理（'' -> localhost:5173/api/...）
   // - remote-dev 直连远程域名，确保环境切换生效
+  // 生产构建下 local 分支为 ''，即与页面同源（前端与 FastAPI 同域部署）。
   if (import.meta.env.DEV && env === 'local') return ''
   return env === 'remote-dev' ? baseMap['remote-dev'] : baseMap.local
+}
+
+export function getApiBaseUrl(env: RuntimeEnv = getRuntimeEnv()): string {
+  const authProxyBase = getAuthWebApiProxyBaseUrl()
+  if (authProxyBase) return authProxyBase
+  return getDirectApiBaseUrl(env)
 }
 
 export function getAuthWebBaseUrl(): string {

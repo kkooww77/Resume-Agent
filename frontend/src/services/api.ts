@@ -1,16 +1,33 @@
 import axios from 'axios'
 import { getAuthHeaders } from '@/lib/authHeaders'
-import { getApiBaseUrl } from '@/lib/runtimeEnv'
+import { getApiBaseUrl, getDirectApiBaseUrl } from '@/lib/runtimeEnv'
 import type { Resume } from '@/types/resume'
 import type { ResumeData } from '@/pages/Workspace/v2/types'
 import { DEFAULT_RESUME_TEMPLATE } from '@/data/defaultTemplate'
 import type { PDFRenderMode } from './pdfRenderMode'
+import {
+  PDF_PAYLOAD_BASE64,
+  PDF_PAYLOAD_ENCODING_HEADER,
+  decodePdfPayload,
+  isPdfPayloadEvent,
+} from './pdfPayload'
 
+/**
+ * PDF 渲染端点。
+ *
+ * local（工作台预览/下载、Agent 会话预览、分享页、Dashboard 批量下载）走
+ * **直连业务主机**而非 auth-web 代理：该端点后端是 get_current_user_optional，
+ * 匿名即可渲染，不需要 BetterAuth cookie 中转；而经过代理时整份 PDF（SSE + hex）
+ * 要先跨境绕到 auth-web 区域再回源，既慢又容易在流式转发中被缓冲或掐断。
+ *
+ * remote（仅管理员）必须保留代理：后端 /api/admin/pdf/** 用 require_admin_only，
+ * 依赖代理注入的 trusted headers 传递管理员身份。
+ */
 function getPDFRenderEndpoint(path: '/api/pdf/render' | '/api/pdf/render/stream', mode: PDFRenderMode): string {
   if (mode === 'remote') {
     return `${getApiBaseUrl()}/api/admin/pdf${path.replace('/api/pdf', '')}`
   }
-  return `${getApiBaseUrl()}${path}`
+  return `${getDirectApiBaseUrl()}${path}`
 }
 
 function parseApiErrorDetail(raw: string): string {
@@ -233,6 +250,9 @@ export async function renderPDFStream(
       'X-PDF-Trace-Id': traceId,
       'X-PDF-Trace-Source': traceSource,
       'X-PDF-Trace-Trigger': traceTrigger,
+      // 与后端协商载荷编码：新后端回 base64（体积 4/3），老后端忽略此头仍回 hex。
+      // 两种事件前端都能解析，因此前后端任一侧未升级都不会影响出图。
+      [PDF_PAYLOAD_ENCODING_HEADER]: PDF_PAYLOAD_BASE64,
       ...getAuthHeaders(),
     },
     signal: context?.signal,
@@ -308,31 +328,29 @@ export async function renderPDFStream(
             console.error('[PDF TRACE][stream:event-error]', { traceId, eventData })
             onError?.(eventData)
             throw new Error(eventData)
-          } else if (eventType === 'pdf') {
-            // pdf 事件的 data 是十六进制字符串
-            const hexData = eventData
-            console.log('[PDF TRACE][stream:event-pdf]', { traceId, hexLen: hexData?.length || 0 })
+          } else if (isPdfPayloadEvent(eventType)) {
+            // pdf / pdf_b64 事件的 data 是编码后的 PDF 载荷
+            console.log('[PDF TRACE][stream:event-pdf]', {
+              traceId,
+              eventType,
+              payloadLen: eventData.length,
+            })
 
-            // 验证hex数据
-            if (!hexData || hexData.length === 0) {
+            if (!eventData || eventData.length === 0) {
               console.error('[PDF TRACE][stream:pdf-empty]', { traceId })
               throw new Error('PDF数据为空')
             }
 
             try {
-              // 确保hex字符串长度为偶数
-              const normalizedHex = hexData.length % 2 === 0 ? hexData : '0' + hexData
-              const matches = normalizedHex.match(/.{2}/g)
-              if (!matches) {
-                console.error('[PDF TRACE][stream:pdf-format-invalid]', { traceId })
-                throw new Error('PDF数据格式错误')
-              }
-
-              pdfData = new Uint8Array(matches.map(byte => parseInt(byte, 16)))
-              console.log('[PDF TRACE][stream:pdf-parsed]', { traceId, bytes: pdfData.length })
+              pdfData = decodePdfPayload(eventType, eventData)
+              console.log('[PDF TRACE][stream:pdf-parsed]', {
+                traceId,
+                eventType,
+                bytes: pdfData.length,
+              })
             } catch (error) {
-              console.error('[PDF TRACE][stream:pdf-parse-failed]', { traceId, error })
-              throw new Error(`PDF数据转换失败: ${error instanceof Error ? error.message : String(error)}`)
+              console.error('[PDF TRACE][stream:pdf-parse-failed]', { traceId, eventType, error })
+              throw error
             }
           }
         } catch (e) {
@@ -372,24 +390,24 @@ export async function renderPDFStream(
       console.error('[PDF TRACE][stream:tail-error]', { traceId, eventData })
       onError?.(eventData)
       throw new Error(eventData)
-    } else if (eventType === 'pdf' && eventData) {
-      // 处理PDF事件
-      const hexData = eventData
-      console.log('[PDF TRACE][stream:tail-pdf]', { traceId, hexLen: hexData.length })
+    } else if (isPdfPayloadEvent(eventType) && eventData) {
+      // 处理PDF事件（hex 或 base64）
+      console.log('[PDF TRACE][stream:tail-pdf]', {
+        traceId,
+        eventType,
+        payloadLen: eventData.length,
+      })
 
       try {
-        const normalizedHex = hexData.length % 2 === 0 ? hexData : '0' + hexData
-        const matches = normalizedHex.match(/.{2}/g)
-        if (!matches) {
-          console.error('[PDF TRACE][stream:tail-pdf-format-invalid]', { traceId })
-          throw new Error('PDF数据格式错误')
-        }
-
-        pdfData = new Uint8Array(matches.map(byte => parseInt(byte, 16)))
-        console.log('[PDF TRACE][stream:tail-pdf-parsed]', { traceId, bytes: pdfData.length })
+        pdfData = decodePdfPayload(eventType, eventData)
+        console.log('[PDF TRACE][stream:tail-pdf-parsed]', {
+          traceId,
+          eventType,
+          bytes: pdfData.length,
+        })
       } catch (error) {
-        console.error('[PDF TRACE][stream:tail-pdf-parse-failed]', { traceId, error })
-        throw new Error(`PDF数据转换失败: ${error instanceof Error ? error.message : String(error)}`)
+        console.error('[PDF TRACE][stream:tail-pdf-parse-failed]', { traceId, eventType, error })
+        throw error
       }
     } else if (eventType === 'progress' && eventData) {
       // 处理进度事件

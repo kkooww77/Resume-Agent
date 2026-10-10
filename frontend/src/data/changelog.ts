@@ -15,6 +15,15 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.6.1',
+    date: '2026-10-10',
+    fixed: [
+      '「我的简历」列表打开更稳定：不再先显示空白、要点一下才刷出来',
+      '修复切换窗口或点击页面后，简历列表整屏变成占位块、要等很久才恢复的问题',
+      'PDF 预览与导出速度更快',
+    ],
+  },
+  {
     version: '3.6.0',
     date: '2026-09-16',
     fixed: [

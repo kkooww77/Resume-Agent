@@ -1,6 +1,7 @@
 """
 PDF 渲染路由 - 使用 LaTeX 生成专业简历 PDF
 """
+import base64
 import time
 import logging
 from pathlib import Path
@@ -33,6 +34,32 @@ except ImportError:
 
 router = APIRouter(prefix="/api", tags=["PDF"])
 logger = logging.getLogger("backend")
+
+# PDF 事件的载荷编码。
+#
+# 历史实现把 PDF 字节 hex 编码后塞进 SSE 的 data 字段，体积是原始字节的 2 倍，
+# 在跨区域链路上代价明显；base64 只有 4/3。但**老前端只会按 hex 解析**，
+# 默认切换会让所有未刷新的页面拿到损坏的 PDF。
+#
+# 因此编码改为按请求头显式协商：
+#   - 不带该头（老前端 / admin 远程流 / 其它调用方）→ 仍然发 hex 的 `pdf` 事件，
+#     与改动前逐字节一致；
+#   - 带头且值为 base64（新前端）→ 发 base64 的 `pdf_b64` 事件。
+# 新前端同时能解析两种事件，所以新旧组合的任意搭配都能正常工作。
+PDF_PAYLOAD_ENCODING_HEADER = "X-PDF-Payload-Encoding"
+PDF_PAYLOAD_BASE64 = "base64"
+PDF_EVENT_HEX = "pdf"
+PDF_EVENT_BASE64 = "pdf_b64"
+
+
+def _encode_pdf_event(pdf_bytes: bytes, requested_encoding: str) -> dict:
+    """把 PDF 字节封装成 SSE 事件；缺省或无法识别的编码一律回退 hex。"""
+    if (requested_encoding or "").strip().lower() == PDF_PAYLOAD_BASE64:
+        return dict(
+            event=PDF_EVENT_BASE64,
+            data=base64.b64encode(pdf_bytes).decode("ascii"),
+        )
+    return dict(event=PDF_EVENT_HEX, data=pdf_bytes.hex())
 
 
 def _resolve_template_dir() -> Path:
@@ -199,6 +226,7 @@ async def render_pdf_stream(
     trace_id = request.headers.get("X-PDF-Trace-Id") or f"backend-s-{int(time.time() * 1000)}"
     trace_source = request.headers.get("X-PDF-Trace-Source") or "-"
     trace_trigger = request.headers.get("X-PDF-Trace-Trigger") or "-"
+    payload_encoding = request.headers.get(PDF_PAYLOAD_ENCODING_HEADER) or "-"
     client = request.client.host if request.client else "-"
 
     async def generate_pdf():
@@ -207,7 +235,7 @@ async def render_pdf_stream(
         urole = current_user.role if current_user else "anon"
         print(
             f"[PDF TRACE][stream:request] trace_id={trace_id} source={trace_source} trigger={trace_trigger} "
-            f"user_id={uid} role={urole} "
+            f"user_id={uid} role={urole} payload_encoding={payload_encoding} "
             f"session_id={session_id or '-'} resume_id={resume_id or '-'} client={client} "
             f"origin={request.headers.get('origin') or '-'} referer={request.headers.get('referer') or '-'} "
             f"section_order={body.section_order} resume_brief={_resume_brief(resume_data)}"
@@ -251,8 +279,8 @@ async def render_pdf_stream(
 
                 quota = build_quota_payload(current_user) if current_user else None
 
-                pdf_hex = pdf_bytes.hex()
-                yield dict(event="pdf", data=pdf_hex)
+                pdf_event = _encode_pdf_event(pdf_bytes, payload_encoding)
+                yield pdf_event
                 if quota:
                     yield dict(
                         event="quota",
@@ -266,7 +294,7 @@ async def render_pdf_stream(
                     )
                 print(
                     f"[PDF TRACE][stream:done] trace_id={trace_id} session_id={session_id or '-'} "
-                    f"resume_id={resume_id or '-'} size={len(pdf_hex)/2} bytes user_id={uid} "
+                    f"resume_id={resume_id or '-'} event={pdf_event['event']} size={len(pdf_bytes)} bytes user_id={uid} "
                     f"pdf_used={quota['used'] if quota else '-'}"
                 )
 
